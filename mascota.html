@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Peques">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e6f4ff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+</style>
+<title>Mi Mascota Virtual</title>
+<style>
+/* Layout: nombre y 4 barras arriba, escenario con la mascota en el centro, botones enormes abajo. */
+:root {
+  --sky: #e6f4ff;
+  --ink: #1b2a55;
+  --white: #ffffff;
+  --coral: #ff7a7a;
+  --sun: #ffc43d;
+  --mint: #5fd8b8;
+  --violet: #a995ff;
+  --blue: #7cc4ff;
+  --edge: rgba(27, 42, 85, 0.22);
+  --good: #2bb673;
+  --warn: #e5383b;
+  --display: ui-rounded, 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+  --body: ui-rounded, 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--body);
+  font-weight: 700;
+  font-size: 18px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 32px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; touch-action: manipulation; }
+button:disabled { opacity: 0.45; cursor: default; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+.wrap { position: relative; }
+.home { position: absolute; left: 0; top: 0; z-index: 9; }
+.home{width:60px;height:60px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;text-decoration:none;box-shadow:0 5px 0 rgba(27,42,85,.22)}
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 9vw, 46px); line-height: 1; margin: 0; text-align: center; padding-inline: 64px; }
+
+/* Barras de estado */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--white); border-radius: 18px; padding: 8px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 4px 0 var(--edge); }
+.stat .ic { font-size: 26px; line-height: 1; }
+.stat .nm { font-size: 12px; opacity: 0.8; }
+.track { width: 100%; height: 12px; border-radius: 6px; background: #dfe8f5; overflow: hidden; }
+.fill { height: 100%; width: 50%; border-radius: 6px; background: var(--good); transition: width 0.4s, background-color 0.4s; }
+.fill.low { background: var(--warn); }
+
+/* Escenario */
+.stage { position: relative; height: clamp(320px, 52vh, 420px); border-radius: 30px; overflow: hidden; background: linear-gradient(#bfe6ff 0 66%, #9be38f 66% 100%); box-shadow: 0 8px 0 var(--edge); }
+.cloud { position: absolute; font-size: 54px; opacity: 0.9; z-index: 0; }
+.scenery { position: absolute; left: 0; bottom: 30%; display: flex; width: max-content; font-size: 54px; line-height: 1; z-index: 1; animation: scroll 9s linear infinite; animation-play-state: paused; }
+.stage.walking .scenery { animation-play-state: running; }
+.set { display: flex; gap: 70px; padding-right: 70px; }
+@keyframes scroll { to { transform: translateX(-50%); } }
+
+.petpos { position: absolute; left: 0; right: 0; bottom: 3%; display: flex; justify-content: center; z-index: 3; }
+.petwrap { width: min(250px, 62%); animation: bob 2.8s ease-in-out infinite; transform-origin: 50% 100%; background: none; padding: 0; }
+.petwrap svg { width: 100%; height: auto; display: block; overflow: visible; }
+.stage.sleeping .petwrap { animation: breathe 3.4s ease-in-out infinite; }
+.stage.walking .petwrap { animation: walk 0.45s ease-in-out infinite; }
+.petwrap.jump { animation: jump 0.5s ease-out; }
+@keyframes bob { 50% { transform: translateY(-7px) scale(1.01, 0.99); } }
+@keyframes breathe { 50% { transform: scale(1.03, 0.97); } }
+@keyframes walk { 25% { transform: translateY(-10px) rotate(-4deg); } 75% { transform: translateY(-10px) rotate(4deg); } }
+@keyframes jump { 0% { transform: translateY(0) scale(1.05, 0.9); } 45% { transform: translateY(-46px) scale(0.95, 1.08); } 100% { transform: translateY(0); } }
+
+/* Mascota (SVG): rostro según atributos */
+.c-body { fill: var(--pet); }
+.c-dark { fill: var(--pet-d); }
+.c-light { fill: var(--pet-l); }
+.e-open, .e-closed, .m-smile, .m-open, .m-sad, .brows { display: none; }
+svg[data-eyes="open"] .e-open { display: inline; }
+svg[data-eyes="closed"] .e-closed { display: inline; }
+svg[data-mouth="smile"] .m-smile { display: inline; }
+svg[data-mouth="open"] .m-open { display: inline; }
+svg[data-mouth="sad"] .m-sad { display: inline; }
+svg[data-mood="sad"][data-eyes="open"] .brows { display: inline; }
+.spot { fill: #8b5a2b; opacity: 0.85; display: none; }
+svg[data-spots="1"] #s0, svg[data-spots="2"] #s0, svg[data-spots="3"] #s0,
+svg[data-spots="2"] #s1, svg[data-spots="3"] #s1,
+svg[data-spots="3"] #s2 { display: inline; }
+
+.bubble { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 6; max-width: 92%; background: var(--white); border-radius: 22px; padding: 8px 18px; font-family: var(--display); font-weight: 800; font-size: 22px; text-align: center; box-shadow: 0 4px 0 var(--edge); transition: opacity 0.25s; }
+.bubble:empty, .bubble.off { opacity: 0; }
+
+.poop { position: absolute; right: 12%; bottom: 5%; z-index: 4; background: none; font-size: 50px; line-height: 1; padding: 6px; }
+.poop[hidden] { display: none; }
+.night { position: absolute; inset: 0; z-index: 5; background: rgba(12, 18, 54, 0.62); opacity: 0; transition: opacity 0.6s; pointer-events: none; }
+.stage.sleeping .night { opacity: 1; }
+.moon { position: absolute; right: 18px; top: 14px; font-size: 44px; z-index: 6; display: none; }
+.stage.sleeping .moon { display: block; }
+.zzz { position: absolute; left: 62%; top: 34%; z-index: 6; font-family: var(--display); font-weight: 800; font-size: 40px; color: var(--white); display: none; animation: zz 2s ease-in-out infinite; }
+.stage.sleeping .zzz { display: block; }
+@keyframes zz { 0% { transform: translate(0, 10px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translate(18px, -26px); opacity: 0; } }
+#wake { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 7; background: var(--sun); border-radius: 26px; padding: 14px 26px; font-family: var(--display); font-weight: 800; font-size: 26px; box-shadow: 0 6px 0 var(--edge); }
+#wake[hidden] { display: none; }
+
+.food { position: absolute; left: 50%; bottom: -10%; font-size: 56px; z-index: 7; transform: translateX(-50%); animation: tomouth 0.7s ease-in forwards; }
+@keyframes tomouth { to { bottom: 36%; font-size: 30px; } }
+.bub { position: absolute; z-index: 7; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; background: rgba(255, 255, 255, 0.55); border: 3px solid var(--white); font-size: 54px; line-height: 1; padding: 0; display: flex; align-items: center; justify-content: center; animation: floaty 2.2s ease-in-out infinite; }
+@keyframes floaty { 50% { transform: translateY(-8px); } }
+.ball { position: absolute; z-index: 7; left: 76%; bottom: 7%; font-size: 64px; line-height: 1; background: none; padding: 6px; }
+.ball.hop { animation: hop 0.5s ease-out; }
+@keyframes hop { 40% { transform: translateY(-90px) rotate(200deg); } 100% { transform: translateY(0) rotate(360deg); } }
+.catch { position: absolute; z-index: 7; font-size: 56px; line-height: 1; background: none; padding: 6px; animation: floaty 1.6s ease-in-out infinite; }
+.heart { position: absolute; z-index: 8; font-size: 34px; pointer-events: none; animation: rise 1.2s ease-out forwards; }
+@keyframes rise { to { transform: translateY(-110px); opacity: 0; } }
+
+/* Botones de acciones */
+.dock { display: block; }
+.dock [hidden] { display: none; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.tile { min-height: 96px; border-radius: 24px; background: var(--tile, var(--white)); box-shadow: 0 6px 0 var(--edge); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.1; padding: 8px 4px; transition: transform 0.1s; }
+.tile .e { font-size: 38px; line-height: 1; }
+.tile:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 var(--edge); }
+.a1 { --tile: var(--sun); } .a2 { --tile: var(--blue); } .a3 { --tile: var(--coral); }
+.a4 { --tile: var(--mint); } .a5 { --tile: var(--violet); } .a6 { --tile: var(--white); }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.pick { aspect-ratio: 1; min-height: 70px; border-radius: 22px; background: var(--white); font-size: 42px; line-height: 1; box-shadow: 0 6px 0 var(--edge); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; }
+.pick small { font-family: var(--body); font-size: 13px; font-weight: 800; }
+.pick:active { transform: translateY(4px); }
+.close { margin-top: 12px; width: 100%; min-height: 54px; border-radius: 20px; background: var(--white); font-family: var(--display); font-weight: 800; font-size: 22px; box-shadow: 0 5px 0 var(--edge); }
+.note { font-size: 14px; opacity: 0.8; margin: 10px 2px 0; font-weight: 700; }
+.say { display: flex; gap: 10px; margin-top: 12px; }
+.say input { flex: 1; min-width: 0; height: 54px; border-radius: 18px; border: 3px solid var(--edge); padding: 0 14px; font: inherit; font-weight: 700; background: var(--white); color: var(--ink); user-select: text; -webkit-user-select: text; }
+.say button { height: 54px; padding: 0 18px; border-radius: 18px; background: var(--sun); font-family: var(--display); font-weight: 800; font-size: 20px; box-shadow: 0 5px 0 var(--edge); }
+
+details { background: var(--white); border-radius: 20px; padding: 12px 16px; box-shadow: 0 4px 0 var(--edge); }
+summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-size: 19px; }
+.set-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.set-row label { font-size: 16px; }
+.set-row input { height: 46px; border-radius: 14px; border: 3px solid var(--edge); padding: 0 12px; font: inherit; font-weight: 700; width: 11em; max-width: 100%; background: var(--white); color: var(--ink); user-select: text; -webkit-user-select: text; }
+.swatch { width: 44px; height: 44px; border-radius: 50%; border: 4px solid var(--white); box-shadow: 0 0 0 3px var(--edge); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--ink); }
+.reset { margin-top: 12px; min-height: 46px; padding: 0 16px; border-radius: 14px; background: var(--sky); font-weight: 800; }
+
+@media (prefers-reduced-motion: reduce) {
+  .petwrap, .stage.sleeping .petwrap, .stage.walking .petwrap, .petwrap.jump, .bub, .catch, .zzz { animation: none; }
+  .scenery, .heart, .ball.hop { animation: none; }
+  .food { animation: none; bottom: 36%; font-size: 30px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a class="home" href="./index.html" aria-label="Inicio">🏠</a>
+  <h1 id="title">Pompi</h1>
+
+  <div class="stats" id="stats">
+    <div class="stat" id="st-fed" role="img"><span class="ic" aria-hidden="true">🍎</span><div class="track"><div class="fill"></div></div><span class="nm">Comida</span></div>
+    <div class="stat" id="st-clean" role="img"><span class="ic" aria-hidden="true">🛁</span><div class="track"><div class="fill"></div></div><span class="nm">Limpio</span></div>
+    <div class="stat" id="st-fun" role="img"><span class="ic" aria-hidden="true">⚽</span><div class="track"><div class="fill"></div></div><span class="nm">Juego</span></div>
+    <div class="stat" id="st-energy" role="img"><span class="ic" aria-hidden="true">💤</span><div class="track"><div class="fill"></div></div><span class="nm">Energía</span></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <span class="cloud" style="left:6%; top:16%" aria-hidden="true">☁️</span>
+    <span class="cloud" style="left:66%; top:26%; font-size:40px" aria-hidden="true">☁️</span>
+    <div class="scenery" aria-hidden="true">
+      <div class="set"><span>🌳</span><span>🌷</span><span>🌲</span><span>🌼</span><span>🌳</span><span>🍄</span><span>🌲</span><span>🌷</span></div>
+      <div class="set"><span>🌳</span><span>🌷</span><span>🌲</span><span>🌼</span><span>🌳</span><span>🍄</span><span>🌲</span><span>🌷</span></div>
+    </div>
+    <div class="bubble" id="bubble" aria-live="polite"></div>
+
+    <div class="petpos">
+      <button class="petwrap" id="petbtn" type="button" aria-label="Tocar a la mascota">
+        <svg id="pet" viewBox="0 0 200 210" data-eyes="open" data-mouth="smile" data-mood="ok" data-spots="0" aria-hidden="true">
+          <ellipse cx="100" cy="198" rx="64" ry="9" fill="rgba(0,0,0,0.14)"/>
+          <circle class="c-dark" cx="50" cy="54" r="26"/>
+          <circle cx="50" cy="54" r="13" fill="#ffb3c1"/>
+          <circle class="c-dark" cx="150" cy="54" r="26"/>
+          <circle cx="150" cy="54" r="13" fill="#ffb3c1"/>
+          <ellipse class="c-dark" cx="68" cy="186" rx="25" ry="13"/>
+          <ellipse class="c-dark" cx="132" cy="186" rx="25" ry="13"/>
+          <ellipse class="c-dark" cx="28" cy="132" rx="14" ry="24" transform="rotate(14 28 132)"/>
+          <ellipse class="c-dark" cx="172" cy="132" rx="14" ry="24" transform="rotate(-14 172 132)"/>
+          <ellipse class="c-body" cx="100" cy="118" rx="74" ry="70"/>
+          <ellipse class="c-light" cx="100" cy="142" rx="44" ry="38"/>
+          <circle id="s0" class="spot" cx="64" cy="88" r="10"/>
+          <circle id="s1" class="spot" cx="136" cy="150" r="9"/>
+          <circle id="s2" class="spot" cx="104" cy="172" r="8"/>
+          <circle cx="58" cy="124" r="11" fill="#ff9aa8" opacity="0.7"/>
+          <circle cx="142" cy="124" r="11" fill="#ff9aa8" opacity="0.7"/>
+          <g class="e-open">
+            <circle cx="76" cy="102" r="11" fill="#1b2a55"/><circle cx="124" cy="102" r="11" fill="#1b2a55"/>
+            <circle cx="80" cy="98" r="4" fill="#fff"/><circle cx="128" cy="98" r="4" fill="#fff"/>
+          </g>
+          <g class="e-closed" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round">
+            <path d="M64 104 Q76 94 88 104"/><path d="M112 104 Q124 94 136 104"/>
+          </g>
+          <g class="brows" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round">
+            <path d="M64 84 L88 90"/><path d="M136 84 L112 90"/>
+          </g>
+          <ellipse cx="100" cy="118" rx="6" ry="4.5" fill="#1b2a55"/>
+          <path class="m-smile" d="M84 128 Q100 146 116 128" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"/>
+          <g class="m-open"><ellipse cx="100" cy="136" rx="15" ry="13" fill="#7a2b3a"/><ellipse cx="100" cy="143" rx="9" ry="6" fill="#ff8fa0"/></g>
+          <path class="m-sad" d="M86 140 Q100 126 114 140" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <button class="poop" id="poop" type="button" aria-label="Limpiar la caca" hidden>💩</button>
+    <div class="night"></div>
+    <span class="moon" aria-hidden="true">🌙</span>
+    <span class="zzz" aria-hidden="true">Z z z</span>
+    <button id="wake" type="button" hidden>☀️ Despertar</button>
+  </div>
+
+  <div class="dock">
+    <div id="v-main" class="grid3">
+      <button class="act tile a1" type="button" data-act="eat"><span class="e" aria-hidden="true">🍎</span>Comer</button>
+      <button class="act tile a2" type="button" data-act="bath"><span class="e" aria-hidden="true">🛁</span>Bañar</button>
+      <button class="act tile a3" type="button" data-act="play"><span class="e" aria-hidden="true">🎾</span>Jugar</button>
+      <button class="act tile a4" type="button" data-act="walk"><span class="e" aria-hidden="true">🌳</span>Pasear</button>
+      <button class="act tile a5" type="button" data-act="sleep"><span class="e" aria-hidden="true">😴</span>Dormir</button>
+      <button class="act tile a6" type="button" data-act="talk"><span class="e" aria-hidden="true">🗣️</span>Hablar</button>
+    </div>
+
+    <div id="v-food" hidden>
+      <div class="grid4">
+        <button class="pick" type="button" data-food="🍎" aria-label="Manzana">🍎<small>Manzana</small></button>
+        <button class="pick" type="button" data-food="🥕" aria-label="Zanahoria">🥕<small>Zanahoria</small></button>
+        <button class="pick" type="button" data-food="🍌" aria-label="Plátano">🍌<small>Plátano</small></button>
+        <button class="pick" type="button" data-food="🥛" aria-label="Leche">🥛<small>Leche</small></button>
+      </div>
+      <button class="close" type="button" data-close>Volver</button>
+    </div>
+
+    <div id="v-talk" hidden>
+      <div class="grid4" id="words"></div>
+      <form class="say" id="sayform">
+        <input id="said" type="text" maxlength="60" placeholder="Escribe algo y lo repite" autocomplete="off" aria-label="Frase para que la mascota repita">
+        <button type="submit">Repetir</button>
+      </form>
+      <p class="note">Tu mascota no puede escuchar el micrófono. Toca un dibujo, o que un adulto escriba una frase, y la repite con su voz graciosa.</p>
+      <button class="close" type="button" data-close>Volver</button>
+    </div>
+  </div>
+
+  <details>
+    <summary>Ajustes para adultos</summary>
+    <div class="set-row">
+      <label for="nameIn">Nombre</label>
+      <input id="nameIn" type="text" maxlength="12" autocomplete="off">
+    </div>
+    <div class="set-row" id="swatches"><span>Color</span></div>
+    <p class="note">La mascota se guarda en este dispositivo. Si pasa tiempo sin jugar tendrá algo de hambre, pero nunca se pone enferma.</p>
+    <button class="reset" id="reset" type="button">Empezar de nuevo</button>
+  </details>
+</div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var KEY = 'mascota-v1';
+  var PAL = [
+    { n: 'Coral', p: '#ff8a7a', d: '#e8695a', l: '#ffd9cf' },
+    { n: 'Menta', p: '#62d6b3', d: '#3fb894', l: '#d6f7ec' },
+    { n: 'Sol', p: '#ffc43d', d: '#e6a615', l: '#fff0c2' },
+    { n: 'Violeta', p: '#a995ff', d: '#8571ee', l: '#e6e0ff' },
+    { n: 'Cielo', p: '#6cb8ff', d: '#4a96e6', l: '#dcefff' }
+  ];
+  var DEF = { name: 'Pompi', color: 0, fed: 70, clean: 85, fun: 70, energy: 85, poop: false, t: Date.now() };
+  var S = JSON.parse(JSON.stringify(DEF));
+  var busy = false, sleeping = false, talking = false, lastNeed = 0, bubbleT = null, sleepT = null;
+  var stage = $('#stage'), svg = $('#pet'), petwrap = $('#petbtn');
+
+  function cl(v) { return Math.max(0, Math.min(100, v)); }
+  function rnd(n) { return Math.floor(Math.random() * n); }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function wait(fn, ms) { return setTimeout(fn, ms); }
+
+  function save() { try { S.t = Date.now(); localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function load() {
+    try {
+      var r = localStorage.getItem(KEY);
+      if (!r) return;
+      var o = JSON.parse(r);
+      ['name', 'color', 'fed', 'clean', 'fun', 'energy', 'poop', 't'].forEach(function (k) { if (o[k] !== undefined) S[k] = o[k]; });
+      var el = Math.min(Date.now() - S.t, 4 * 3600e3);
+      if (!(el > 0)) el = 0;
+      var ticks = el / 10000 * 0.1;
+      S.fed = Math.max(20, S.fed - 0.8 * ticks);
+      S.fun = Math.max(20, S.fun - 1.0 * ticks);
+      S.energy = Math.max(25, S.energy - 0.5 * ticks);
+      S.clean = Math.max(20, S.clean - 0.4 * ticks);
+      if (typeof S.name !== 'string' || !S.name) S.name = 'Pompi';
+      if (!PAL[S.color]) S.color = 0;
+    } catch (e) {}
+  }
+
+  /* Voz y sonidos */
+  function speak(t, pitch) {
+    try {
+      if (!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t);
+      u.lang = 'es-ES'; u.rate = 1.05; u.pitch = pitch || 1.9;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  var ac;
+  function tone(f, d, type, when) {
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      var o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + (when || 0);
+      o.type = type || 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.2, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + d);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t0); o.stop(t0 + d);
+    } catch (e) {}
+  }
+  function good() { tone(523, 0.12, 'triangle'); tone(659, 0.12, 'triangle', 0.12); tone(784, 0.22, 'triangle', 0.24); }
+  function pop() { tone(300 + Math.random() * 400, 0.09, 'square'); }
+
+  /* Mensajes y gestos */
+  function bubble(text) {
+    var b = $('#bubble');
+    b.textContent = text; b.classList.remove('off');
+    clearTimeout(bubbleT);
+    bubbleT = wait(function () { b.classList.add('off'); }, 3800);
+  }
+  function say(text) { bubble(text); speak(text); talkAnim(text); }
+  function talkAnim(text) {
+    var ms = Math.min(3500, Math.max(700, text.length * 90)), n = 0;
+    talking = true;
+    var t = setInterval(function () {
+      n++;
+      svg.setAttribute('data-mouth', n % 2 ? 'open' : 'smile');
+      if (n * 180 >= ms) { clearInterval(t); talking = false; face(); }
+    }, 180);
+  }
+  function jump() {
+    petwrap.classList.remove('jump'); void petwrap.offsetWidth; petwrap.classList.add('jump');
+    wait(function () { petwrap.classList.remove('jump'); }, 550);
+  }
+  function hearts() {
+    for (var i = 0; i < 5; i++) {
+      var h = document.createElement('span');
+      h.className = 'heart'; h.textContent = '❤️';
+      h.style.left = (36 + Math.random() * 28) + '%';
+      h.style.top = (38 + Math.random() * 20) + '%';
+      h.style.animationDelay = (i * 0.1) + 's';
+      stage.appendChild(h);
+      (function (el) { wait(function () { el.remove(); }, 1600); })(h);
+    }
+  }
+
+  /* Pantalla */
+  function face() {
+    var m = Math.min(S.fed, S.clean, S.fun, S.energy);
+    var avg = (S.fed + S.clean + S.fun + S.energy) / 4;
+    svg.setAttribute('data-eyes', sleeping ? 'closed' : 'open');
+    if (!talking) svg.setAttribute('data-mouth', sleeping ? 'smile' : (m < 25 ? 'sad' : 'smile'));
+    svg.setAttribute('data-mood', m < 25 ? 'sad' : (avg >= 65 ? 'happy' : 'ok'));
+  }
+  var STATS = [['fed', 'Comida'], ['clean', 'Limpio'], ['fun', 'Juego'], ['energy', 'Energía']];
+  function ui() {
+    STATS.forEach(function (s) {
+      var v = Math.round(S[s[0]]), el = $('#st-' + s[0]);
+      var f = el.querySelector('.fill');
+      f.style.width = v + '%';
+      f.classList.toggle('low', v < 25);
+      el.setAttribute('aria-label', s[1] + ' ' + v + ' de 100');
+    });
+    var spots = S.clean < 40 ? 3 : S.clean < 65 ? 2 : S.clean < 85 ? 1 : 0;
+    svg.setAttribute('data-spots', spots);
+    $('#poop').hidden = !S.poop;
+    $('#title').textContent = S.name;
+    var p = PAL[S.color] || PAL[0];
+    svg.style.setProperty('--pet', p.p); svg.style.setProperty('--pet-d', p.d); svg.style.setProperty('--pet-l', p.l);
+    document.querySelectorAll('.swatch').forEach(function (b, i) { b.setAttribute('aria-pressed', i === S.color ? 'true' : 'false'); });
+    face();
+  }
+  function lock(on) { document.querySelectorAll('.act').forEach(function (b) { b.disabled = on; }); }
+  function view(id) { ['main', 'food', 'talk'].forEach(function (v) { $('#v-' + v).hidden = v !== id; }); }
+  function done() { busy = false; lock(false); view('main'); save(); ui(); }
+
+  /* Paso del tiempo */
+  function tick() {
+    if (sleeping) return;
+    S.fed = cl(S.fed - 0.8); S.fun = cl(S.fun - 1.0); S.energy = cl(S.energy - 0.5);
+    S.clean = cl(S.clean - 0.4 - (S.poop ? 0.5 : 0));
+    if (!S.poop && S.fed > 40 && Math.random() < 0.05) S.poop = true;
+    save(); ui(); needs();
+  }
+  function needs() {
+    if (busy || sleeping) return;
+    var now = Date.now();
+    if (now - lastNeed < 45000) return;
+    var list = [['fed', '¡Tengo hambre!'], ['fun', '¡Quiero jugar!'], ['clean', 'Estoy sucio, quiero un baño'], ['energy', 'Tengo sueño']];
+    var worst = null;
+    list.forEach(function (n) { if (S[n[0]] < 30 && (!worst || S[n[0]] < S[worst[0]])) worst = n; });
+    if (worst) { lastNeed = now; say(worst[1]); }
+  }
+  setInterval(tick, 10000);
+  setInterval(function () {
+    if (sleeping || talking) return;
+    svg.setAttribute('data-eyes', 'closed');
+    wait(function () { if (!sleeping) svg.setAttribute('data-eyes', 'open'); }, 150);
+  }, 4200);
+
+  /* Acciones */
+  function startFeed(emo) {
+    if (busy) return;
+    if (S.fed >= 95) { view('main'); jump(); say('¡Estoy llenito!'); return; }
+    busy = true; lock(true); view('main');
+    var f = document.createElement('span');
+    f.className = 'food'; f.textContent = emo; stage.appendChild(f);
+    wait(function () {
+      f.remove();
+      var n = 0;
+      (function chew() {
+        n++;
+        svg.setAttribute('data-mouth', n % 2 ? 'open' : 'smile');
+        tone(n % 2 ? 260 : 340, 0.08, 'square');
+        if (n < 6) { wait(chew, 230); return; }
+        S.fed = cl(S.fed + 25); S.fun = cl(S.fun + 3);
+        if (!S.poop && Math.random() < 0.35) S.poop = true;
+        good(); hearts(); jump(); done(); say('¡Ñam, ñam, qué rico!');
+      })();
+    }, 700);
+  }
+
+  function startBath() {
+    if (busy) return;
+    busy = true; lock(true);
+    bubble('¡Toca las burbujas!'); speak('¡Toca las burbujas!');
+    var spots = shuffle([[30, 42], [68, 38], [34, 64], [66, 62]]);
+    var left = spots.length;
+    spots.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'bub'; b.textContent = '🫧'; b.setAttribute('aria-label', 'Burbuja');
+      b.style.left = (p[0] + rnd(5) - 2) + '%'; b.style.top = (p[1] + rnd(5) - 2) + '%';
+      b.addEventListener('click', function () {
+        b.remove(); pop(); left--;
+        S.clean = cl(S.clean + 25); S.energy = cl(S.energy - 1); ui();
+        if (left === 0) {
+          S.clean = 100; S.poop = false; S.fun = cl(S.fun + 4);
+          good(); hearts(); jump(); done(); say('¡Qué limpio estoy!');
+        }
+      });
+      stage.appendChild(b);
+    });
+  }
+
+  function startPlay() {
+    if (busy) return;
+    busy = true; lock(true);
+    var count = 0;
+    var ball = document.createElement('button');
+    ball.type = 'button'; ball.className = 'ball'; ball.textContent = '🎾'; ball.setAttribute('aria-label', 'Pelota');
+    bubble('¡Lanza la pelota!'); speak('¡Lanza la pelota!');
+    ball.addEventListener('click', function () {
+      count++;
+      ball.classList.remove('hop'); void ball.offsetWidth; ball.classList.add('hop');
+      tone(420 + count * 70, 0.12, 'triangle'); jump();
+      S.fun = cl(S.fun + 10); S.energy = cl(S.energy - 3); ui();
+      if (count >= 5) {
+        ball.remove(); good(); hearts(); done(); say('¡Qué divertido!');
+      }
+    });
+    stage.appendChild(ball);
+  }
+
+  function startWalk() {
+    if (busy) return;
+    if (S.energy < 20) { say('Estoy muy cansado para pasear'); return; }
+    busy = true; lock(true);
+    stage.classList.add('walking');
+    bubble('¡Vamos de paseo!'); speak('¡Vamos de paseo!');
+    var things = ['🦋', '🌼', '🐞', '🐝', '🌈'], found = 0, items = [];
+    [900, 2600, 4400, 6200].forEach(function (ms, i) {
+      wait(function () {
+        if (!stage.classList.contains('walking')) return;
+        var c = document.createElement('button');
+        c.type = 'button'; c.className = 'catch'; c.textContent = things[(i + rnd(3)) % things.length];
+        c.setAttribute('aria-label', 'Cogerlo');
+        c.style.left = (12 + rnd(66)) + '%'; c.style.top = (10 + rnd(30)) + '%';
+        c.addEventListener('click', function () { c.remove(); found++; pop(); S.fun = cl(S.fun + 4); ui(); });
+        stage.appendChild(c); items.push(c);
+        wait(function () { c.remove(); }, 3400);
+      }, ms);
+    });
+    wait(function () {
+      stage.classList.remove('walking');
+      items.forEach(function (c) { c.remove(); });
+      S.energy = cl(S.energy - 15); S.clean = cl(S.clean - 20); S.fun = cl(S.fun + 12);
+      good(); hearts(); done();
+      say(found > 0 ? '¡Qué paseo tan bonito!' : '¡Qué paseo tan bonito!');
+    }, 8200);
+  }
+
+  function startSleep() {
+    if (busy) return;
+    busy = true; lock(true); sleeping = true;
+    stage.classList.add('sleeping'); $('#wake').hidden = false;
+    $('#poop').style.zIndex = '4';
+    face();
+    bubble('Buenas noches'); speak('Buenas noches', 1.4);
+    sleepT = setInterval(function () {
+      S.energy = cl(S.energy + 4); S.fed = cl(S.fed - 0.05); ui();
+      if (S.energy >= 100) wake();
+    }, 1000);
+  }
+  function wake() {
+    if (!sleeping) return;
+    clearInterval(sleepT); sleeping = false;
+    stage.classList.remove('sleeping'); $('#wake').hidden = true;
+    busy = false; lock(false); save(); ui(); jump();
+    say('¡Buenos días!');
+  }
+
+  var WORDS = [['👋', 'Hola'], ['🍎', 'Manzana'], ['🐶', 'Perro'], ['🐱', 'Gato'], ['🌞', 'Sol'], ['🎈', 'Globo'], ['❤️', 'Te quiero'], ['🥳', 'Hurra']];
+  function repeat(text) {
+    text = String(text).trim();
+    if (!text) return;
+    jump(); S.fun = cl(S.fun + 3); save(); ui();
+    bubble(text); speak(text); talkAnim(text);
+  }
+  WORDS.forEach(function (w) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick'; b.setAttribute('aria-label', w[1]);
+    b.innerHTML = '<span aria-hidden="true">' + w[0] + '</span><small>' + w[1] + '</small>';
+    b.addEventListener('click', function () { repeat(w[1] === 'Hurra' ? '¡Hurra!' : w[1]); });
+    $('#words').appendChild(b);
+  });
+  $('#sayform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var i = $('#said'); repeat(i.value); i.value = '';
+  });
+
+  /* Eventos */
+  document.querySelectorAll('.act').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var a = b.getAttribute('data-act');
+      if (a === 'eat') view('food');
+      if (a === 'talk') view('talk');
+      if (a === 'bath') startBath();
+      if (a === 'play') startPlay();
+      if (a === 'walk') startWalk();
+      if (a === 'sleep') startSleep();
+    });
+  });
+  document.querySelectorAll('[data-food]').forEach(function (b) {
+    b.addEventListener('click', function () { startFeed(b.getAttribute('data-food')); });
+  });
+  document.querySelectorAll('[data-close]').forEach(function (b) {
+    b.addEventListener('click', function () { view('main'); });
+  });
+  $('#wake').addEventListener('click', wake);
+  petwrap.addEventListener('click', function () {
+    if (sleeping) return;
+    jump(); hearts(); tone(700, 0.1, 'triangle'); tone(900, 0.1, 'triangle', 0.1);
+    bubble('¡Jiji, cosquillas!'); speak('¡Jiji, cosquillas!'); talkAnim('¡Jiji, cosquillas!');
+  });
+  $('#poop').addEventListener('click', function () {
+    S.poop = false; S.clean = cl(S.clean + 6); pop(); save(); ui(); bubble('¡Limpio!');
+  });
+
+  /* Ajustes */
+  var sw = $('#swatches');
+  PAL.forEach(function (p, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'swatch'; b.style.background = p.p; b.setAttribute('aria-label', p.n);
+    b.addEventListener('click', function () { S.color = i; save(); ui(); });
+    sw.appendChild(b);
+  });
+  var nameIn = $('#nameIn');
+  nameIn.addEventListener('input', function () {
+    S.name = nameIn.value.trim().slice(0, 12) || 'Pompi'; $('#title').textContent = S.name; save();
+  });
+  var armed = false, armT = null;
+  $('#reset').addEventListener('click', function () {
+    var b = $('#reset');
+    if (!armed) {
+      armed = true; b.textContent = '¿Seguro? Toca otra vez';
+      armT = wait(function () { armed = false; b.textContent = 'Empezar de nuevo'; }, 4000);
+      return;
+    }
+    clearTimeout(armT); armed = false; b.textContent = 'Empezar de nuevo';
+    var c = S.color;
+    S = JSON.parse(JSON.stringify(DEF)); S.color = c; S.t = Date.now();
+    nameIn.value = S.name; save(); ui();
+  });
+
+  load();
+  nameIn.value = S.name;
+  ui();
+  wait(function () { bubble('¡Hola! Soy ' + S.name); }, 400);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+</body>
+</html>

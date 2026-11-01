@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Peques">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e6f4ff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+</style>
+<title>Juegos de peques</title>
+<style>
+:root{--sky:#e6f4ff;--ink:#1b2a55;--sun:#ffc43d;--mint:#5fd8b8;--edge:rgba(27,42,85,.22);
+--display:ui-rounded,'Arial Rounded MT Bold','Trebuchet MS',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{background:var(--sky);color:var(--ink);font-family:var(--display);font-weight:800;
+padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+padding-block:28px 32px;min-height:100vh;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-size:clamp(38px,11vw,56px);line-height:1;margin:0;text-align:center}
+.big{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:230px;
+border-radius:34px;text-decoration:none;color:var(--ink);box-shadow:0 9px 0 var(--edge);font-size:34px;transition:transform .1s}
+.big:active{transform:translateY(6px);box-shadow:0 3px 0 var(--edge)}
+.big .e{font-size:86px;line-height:1}
+.a{background:var(--sun)}.b{background:var(--mint)}
+a:focus-visible{outline:4px solid var(--ink);outline-offset:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>¡A jugar!</h1>
+  <a class="big a" href="./juegos.html"><span class="e" aria-hidden="true">🎈</span>Minijuegos</a>
+  <a class="big b" href="./mascota.html"><span class="e" aria-hidden="true">🐾</span>Mi mascota</a>
+</div>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+</body>
+</html>
