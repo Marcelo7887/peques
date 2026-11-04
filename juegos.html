@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
+<script src="voz.js"></script>
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}img{max-width:100%}[hidden]{display:none!important}
@@ -186,6 +187,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 9vw, 
   /* Voz y sonidos (empiezan al primer toque) */
   function speak(t) {
     lastSpoken = t;
+    if (window.VOZ) { VOZ.speak(t, { rate: 0.85, pitch: 1.15 }); return; }
     try {
       if (!('speechSynthesis' in window)) return;
       speechSynthesis.cancel();

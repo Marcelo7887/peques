@@ -3,6 +3,8 @@ JUEGOS DE PEQUES - qué hay en esta carpeta
 index.html          Pantalla de inicio con los dos juegos
 juegos.html         Los 4 minijuegos (animales, colores, memoria, globos)
 mascota.html        La mascota virtual
+alan.html           Juego de plataformas de Alan (12 niveles)
+voz.js              Elige la voz y la velocidad de los tres juegos
 manifest.webmanifest  Dice al iPhone el nombre y el icono de la app
 sw.js               Guarda los archivos para que funcione sin internet
 icon-*.png          Iconos de la app

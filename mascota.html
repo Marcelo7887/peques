@@ -11,13 +11,14 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
+<script src="voz.js"></script>
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}img{max-width:100%}[hidden]{display:none!important}
 </style>
 <title>Mi Mascota Virtual</title>
 <style>
-/* Layout: nombre y 4 barras arriba, escenario con la mascota en el centro, botones enormes abajo. */
+/* Layout: nombre y monedas arriba, 5 barras, escenario con la mascota, botones enormes y pantallas de ropa, retos y logros. */
 :root {
   --sky: #e6f4ff;
   --ink: #1b2a55;
@@ -52,19 +53,23 @@ body {
 button { font: inherit; color: inherit; cursor: pointer; border: 0; touch-action: manipulation; }
 button:disabled { opacity: 0.45; cursor: default; }
 button:focus-visible, input:focus-visible, summary:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
-.wrap { position: relative; }
-.home { position: absolute; left: 0; top: 0; z-index: 9; }
+.top { display: flex; align-items: center; gap: 10px; min-height: 60px; }
 .home{width:60px;height:60px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;text-decoration:none;box-shadow:0 5px 0 rgba(27,42,85,.22)}
-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 9vw, 46px); line-height: 1; margin: 0; text-align: center; padding-inline: 64px; }
+.home{flex:none}
+h1 { flex: 1; min-width: 0; font-family: var(--display); font-weight: 800; font-size: clamp(30px, 8vw, 44px); line-height: 1; margin: 0; text-align: center; }
+.wallet { flex: none; background: var(--white); border-radius: 999px; padding: 8px 16px; font-family: var(--display); font-weight: 800; font-size: 24px; box-shadow: 0 5px 0 var(--edge); }
+.wallet.bump { animation: bump 0.5s; }
+@keyframes bump { 40% { transform: scale(1.18); } }
 
 /* Barras de estado */
-.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.stat { background: var(--white); border-radius: 18px; padding: 8px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 4px 0 var(--edge); }
-.stat .ic { font-size: 26px; line-height: 1; }
-.stat .nm { font-size: 12px; opacity: 0.8; }
-.track { width: 100%; height: 12px; border-radius: 6px; background: #dfe8f5; overflow: hidden; }
-.fill { height: 100%; width: 50%; border-radius: 6px; background: var(--good); transition: width 0.4s, background-color 0.4s; }
+.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.stat { background: var(--white); border-radius: 16px; padding: 7px 5px 9px; display: flex; flex-direction: column; align-items: center; gap: 5px; box-shadow: 0 4px 0 var(--edge); }
+.stat .ic { font-size: 22px; line-height: 1; }
+.stat .nm { font-size: 11px; opacity: 0.8; }
+.track { width: 100%; height: 10px; border-radius: 5px; background: #dfe8f5; overflow: hidden; }
+.fill { height: 100%; width: 50%; border-radius: 5px; background: var(--good); transition: width 0.4s, background-color 0.4s; }
 .fill.low { background: var(--warn); }
+.fill.grow { background: var(--violet); }
 
 /* Escenario */
 .stage { position: relative; height: clamp(320px, 52vh, 420px); border-radius: 30px; overflow: hidden; background: linear-gradient(#bfe6ff 0 66%, #9be38f 66% 100%); box-shadow: 0 8px 0 var(--edge); }
@@ -73,17 +78,22 @@ h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 9vw, 
 .stage.walking .scenery { animation-play-state: running; }
 .set { display: flex; gap: 70px; padding-right: 70px; }
 @keyframes scroll { to { transform: translateX(-50%); } }
+.deco { position: absolute; left: 4%; bottom: 5%; z-index: 2; line-height: 1; pointer-events: none; }
 
 .petpos { position: absolute; left: 0; right: 0; bottom: 3%; display: flex; justify-content: center; z-index: 3; }
-.petwrap { width: min(250px, 62%); animation: bob 2.8s ease-in-out infinite; transform-origin: 50% 100%; background: none; padding: 0; }
+.petwrap { width: calc(min(250px, 62%) * var(--sc, 1)); animation: bob 2.8s ease-in-out infinite; transform-origin: 50% 100%; background: none; padding: 0; transition: width 0.5s; }
+.petwrap[hidden] { display: none; }
 .petwrap svg { width: 100%; height: auto; display: block; overflow: visible; }
+.petwrap #petslot { display: block; }
 .stage.sleeping .petwrap { animation: breathe 3.4s ease-in-out infinite; }
 .stage.walking .petwrap { animation: walk 0.45s ease-in-out infinite; }
 .petwrap.jump { animation: jump 0.5s ease-out; }
+.petwrap.wob { animation: wob 0.4s; }
 @keyframes bob { 50% { transform: translateY(-7px) scale(1.01, 0.99); } }
 @keyframes breathe { 50% { transform: scale(1.03, 0.97); } }
 @keyframes walk { 25% { transform: translateY(-10px) rotate(-4deg); } 75% { transform: translateY(-10px) rotate(4deg); } }
 @keyframes jump { 0% { transform: translateY(0) scale(1.05, 0.9); } 45% { transform: translateY(-46px) scale(0.95, 1.08); } 100% { transform: translateY(0); } }
+@keyframes wob { 20% { transform: rotate(-9deg); } 50% { transform: rotate(8deg); } 80% { transform: rotate(-4deg); } }
 
 /* Mascota (SVG): rostro según atributos */
 .c-body { fill: var(--pet); }
@@ -97,9 +107,14 @@ svg[data-mouth="open"] .m-open { display: inline; }
 svg[data-mouth="sad"] .m-sad { display: inline; }
 svg[data-mood="sad"][data-eyes="open"] .brows { display: inline; }
 .spot { fill: #8b5a2b; opacity: 0.85; display: none; }
-svg[data-spots="1"] #s0, svg[data-spots="2"] #s0, svg[data-spots="3"] #s0,
-svg[data-spots="2"] #s1, svg[data-spots="3"] #s1,
-svg[data-spots="3"] #s2 { display: inline; }
+svg[data-spots="1"] .sp0, svg[data-spots="2"] .sp0, svg[data-spots="3"] .sp0,
+svg[data-spots="2"] .sp1, svg[data-spots="3"] .sp1,
+svg[data-spots="3"] .sp2 { display: inline; }
+.cr { display: none; fill: none; stroke: #8b6b3a; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+svg[data-crack="1"] .c1, svg[data-crack="2"] .c1, svg[data-crack="3"] .c1, svg[data-crack="4"] .c1,
+svg[data-crack="2"] .c2, svg[data-crack="3"] .c2, svg[data-crack="4"] .c2,
+svg[data-crack="3"] .c3, svg[data-crack="4"] .c3,
+svg[data-crack="4"] .c4 { display: inline; }
 
 .bubble { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 6; max-width: 92%; background: var(--white); border-radius: 22px; padding: 8px 18px; font-family: var(--display); font-weight: 800; font-size: 22px; text-align: center; box-shadow: 0 4px 0 var(--edge); transition: opacity 0.25s; }
 .bubble:empty, .bubble.off { opacity: 0; }
@@ -126,16 +141,35 @@ svg[data-spots="3"] #s2 { display: inline; }
 .catch { position: absolute; z-index: 7; font-size: 56px; line-height: 1; background: none; padding: 6px; animation: floaty 1.6s ease-in-out infinite; }
 .heart { position: absolute; z-index: 8; font-size: 34px; pointer-events: none; animation: rise 1.2s ease-out forwards; }
 @keyframes rise { to { transform: translateY(-110px); opacity: 0; } }
+.coinfly { position: absolute; z-index: 12; left: 50%; top: 30%; transform: translateX(-50%); font-family: var(--display); font-weight: 800; font-size: 34px; color: #fff; text-shadow: 0 3px 0 rgba(27, 42, 85, 0.6); pointer-events: none; animation: cfly 1.4s ease-out forwards; }
+@keyframes cfly { to { transform: translate(-50%, -90px); opacity: 0; } }
+
+/* Premios a pantalla del escenario */
+.reveal { position: absolute; inset: 0; z-index: 20; background: rgba(27, 42, 85, 0.86); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 12px; text-align: center; color: var(--white); }
+.reveal[hidden] { display: none; }
+.rv-t { font-family: var(--display); font-weight: 800; font-size: clamp(24px, 7vw, 34px); line-height: 1.05; text-wrap: balance; }
+.rv-i { width: min(190px, 50%); display: flex; justify-content: center; align-items: center; font-size: 80px; line-height: 1; animation: floaty 2s ease-in-out infinite; }
+.rv-i svg { width: 100%; height: auto; }
+.rv-s { font-size: 18px; }
+.rv-b { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.rv-b button { min-height: 54px; padding: 0 22px; border-radius: 20px; background: var(--sun); color: var(--ink); font-family: var(--display); font-weight: 800; font-size: 22px; box-shadow: 0 5px 0 var(--edge); }
+.rv-b button.alt { background: var(--white); }
+.rv-b button[hidden] { display: none; }
 
 /* Botones de acciones */
-.dock { display: block; }
 .dock [hidden] { display: none; }
 .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.tile { min-height: 96px; border-radius: 24px; background: var(--tile, var(--white)); box-shadow: 0 6px 0 var(--edge); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.1; padding: 8px 4px; transition: transform 0.1s; }
+.tile { position: relative; min-height: 96px; border-radius: 24px; background: var(--tile, var(--white)); box-shadow: 0 6px 0 var(--edge); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: var(--display); font-weight: 800; font-size: 20px; line-height: 1.1; padding: 8px 4px; transition: transform 0.1s; }
 .tile .e { font-size: 38px; line-height: 1; }
 .tile:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 var(--edge); }
 .a1 { --tile: var(--sun); } .a2 { --tile: var(--blue); } .a3 { --tile: var(--coral); }
 .a4 { --tile: var(--mint); } .a5 { --tile: var(--violet); } .a6 { --tile: var(--white); }
+.row2 { margin-top: 12px; }
+.row2 .tile { min-height: 78px; font-size: 18px; }
+.row2 .tile .e { font-size: 32px; }
+.b1 { --tile: #ffd9f0; } .b2 { --tile: #ffe9a8; } .b3 { --tile: #d6f7ec; }
+.badge { position: absolute; top: -6px; right: -4px; min-width: 28px; height: 28px; padding: 0 7px; border-radius: 14px; background: var(--warn); color: #fff; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 var(--edge); }
+.badge[hidden] { display: none; }
 .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .pick { aspect-ratio: 1; min-height: 70px; border-radius: 22px; background: var(--white); font-size: 42px; line-height: 1; box-shadow: 0 6px 0 var(--edge); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; }
 .pick small { font-family: var(--body); font-size: 13px; font-weight: 800; }
@@ -145,6 +179,53 @@ svg[data-spots="3"] #s2 { display: inline; }
 .say { display: flex; gap: 10px; margin-top: 12px; }
 .say input { flex: 1; min-width: 0; height: 54px; border-radius: 18px; border: 3px solid var(--edge); padding: 0 14px; font: inherit; font-weight: 700; background: var(--white); color: var(--ink); user-select: text; -webkit-user-select: text; }
 .say button { height: 54px; padding: 0 18px; border-radius: 18px; background: var(--sun); font-family: var(--display); font-weight: 800; font-size: 20px; box-shadow: 0 5px 0 var(--edge); }
+
+/* Ropa y tienda */
+.tabs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.tab { height: 48px; border-radius: 14px; background: var(--white); font-size: 24px; line-height: 1; box-shadow: 0 4px 0 var(--edge); padding: 0; }
+.tab[aria-pressed="true"] { background: var(--sun); transform: translateY(2px); box-shadow: 0 2px 0 var(--edge); }
+.sheet { margin-top: 12px; max-height: 44vh; overflow-y: auto; overscroll-behavior: contain; padding: 4px 4px 8px; }
+.items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.it { position: relative; border-radius: 20px; background: var(--white); box-shadow: 0 5px 0 var(--edge); padding: 8px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 128px; }
+.it:active { transform: translateY(3px); }
+.it.eq { background: #fff3c4; outline: 4px solid var(--sun); }
+.it.un .pv { opacity: 0.88; }
+.pv { width: 100%; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 44px; line-height: 1; }
+.pv svg { width: 100%; height: 100%; }
+.pv .sc { width: 64px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 30px; border: 3px solid rgba(27, 42, 85, 0.18); }
+.it .nm { font-size: 13px; line-height: 1.1; text-align: center; }
+.it .st { font-family: var(--display); font-weight: 800; font-size: 15px; background: #eef3fb; border-radius: 10px; padding: 2px 8px; }
+.it.eq .st { background: var(--sun); }
+.nw { position: absolute; top: -6px; left: -4px; background: var(--warn); color: #fff; font-family: var(--display); font-size: 13px; border-radius: 10px; padding: 1px 8px; box-shadow: 0 3px 0 var(--edge); }
+.shake { animation: shk 0.35s; }
+@keyframes shk { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+/* Retos y logros */
+.qlist { display: flex; flex-direction: column; gap: 10px; }
+.q { display: flex; align-items: center; gap: 12px; background: var(--white); border-radius: 20px; padding: 10px 14px; box-shadow: 0 5px 0 var(--edge); }
+.q.done { background: #d6f7ec; }
+.q .qe { font-size: 40px; line-height: 1; flex: none; }
+.q .qb { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.q .qt { font-size: 14px; line-height: 1.15; }
+.dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.dot { width: 18px; height: 18px; border-radius: 50%; background: #dfe8f5; }
+.dot.on { background: var(--good); }
+.q .qr { flex: none; font-family: var(--display); font-weight: 800; font-size: 18px; }
+.chest { margin-top: 12px; width: 100%; min-height: 76px; border-radius: 24px; background: var(--sun); font-family: var(--display); font-weight: 800; font-size: 24px; box-shadow: 0 6px 0 var(--edge); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.chest:disabled { background: #e8edf5; }
+.chest.ready { animation: floaty 1.2s ease-in-out infinite; }
+.chest .e { font-size: 44px; line-height: 1; }
+.agrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ach { background: var(--white); border-radius: 20px; padding: 10px; box-shadow: 0 5px 0 var(--edge); display: flex; flex-direction: column; gap: 6px; }
+.ach.done { background: #fff3c4; }
+.ach .ah { display: flex; align-items: center; gap: 8px; }
+.ach .ae { font-size: 34px; line-height: 1; }
+.ach .at { font-size: 13px; line-height: 1.15; }
+.ach .ar { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ach .ar .pv { width: 52px; height: 46px; font-size: 30px; }
+.ach .track { height: 12px; }
+.ach .fill { background: var(--violet); }
+.ach.done .fill { background: var(--good); }
 
 details { background: var(--white); border-radius: 20px; padding: 12px 16px; box-shadow: 0 4px 0 var(--edge); }
 summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-size: 19px; }
@@ -156,8 +237,8 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
 .reset { margin-top: 12px; min-height: 46px; padding: 0 16px; border-radius: 14px; background: var(--sky); font-weight: 800; }
 
 @media (prefers-reduced-motion: reduce) {
-  .petwrap, .stage.sleeping .petwrap, .stage.walking .petwrap, .petwrap.jump, .bub, .catch, .zzz { animation: none; }
-  .scenery, .heart, .ball.hop { animation: none; }
+  .petwrap, .stage.sleeping .petwrap, .stage.walking .petwrap, .petwrap.jump, .petwrap.wob, .bub, .catch, .zzz, .rv-i, .chest.ready { animation: none; }
+  .scenery, .heart, .ball.hop, .coinfly, .shake, .wallet.bump { animation: none; }
   .food { animation: none; bottom: 36%; font-size: 30px; }
 }
 </style>
@@ -165,60 +246,46 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
 <body>
 
 <div class="wrap">
-  <a class="home" href="./index.html" aria-label="Inicio">🏠</a>
-  <h1 id="title">Pompi</h1>
+  <div class="top">
+    <a class="home" href="./index.html" aria-label="Inicio">🏠</a>
+    <h1 id="title">Pompi</h1>
+    <div class="wallet" id="wallet" aria-live="polite"><span aria-hidden="true">🪙</span> <span id="coinN">0</span></div>
+  </div>
 
   <div class="stats" id="stats">
     <div class="stat" id="st-fed" role="img"><span class="ic" aria-hidden="true">🍎</span><div class="track"><div class="fill"></div></div><span class="nm">Comida</span></div>
     <div class="stat" id="st-clean" role="img"><span class="ic" aria-hidden="true">🛁</span><div class="track"><div class="fill"></div></div><span class="nm">Limpio</span></div>
     <div class="stat" id="st-fun" role="img"><span class="ic" aria-hidden="true">⚽</span><div class="track"><div class="fill"></div></div><span class="nm">Juego</span></div>
     <div class="stat" id="st-energy" role="img"><span class="ic" aria-hidden="true">💤</span><div class="track"><div class="fill"></div></div><span class="nm">Energía</span></div>
+    <div class="stat" id="st-grow" role="img"><span class="ic" id="growIc" aria-hidden="true">🥚</span><div class="track"><div class="fill grow"></div></div><span class="nm" id="growNm">Crece</span></div>
   </div>
 
   <div class="stage" id="stage">
-    <span class="cloud" style="left:6%; top:16%" aria-hidden="true">☁️</span>
-    <span class="cloud" style="left:66%; top:26%; font-size:40px" aria-hidden="true">☁️</span>
+    <span class="cloud" id="cl1" style="left:6%; top:16%" aria-hidden="true">☁️</span>
+    <span class="cloud" id="cl2" style="left:66%; top:26%; font-size:40px" aria-hidden="true">☁️</span>
     <div class="scenery" aria-hidden="true">
-      <div class="set"><span>🌳</span><span>🌷</span><span>🌲</span><span>🌼</span><span>🌳</span><span>🍄</span><span>🌲</span><span>🌷</span></div>
-      <div class="set"><span>🌳</span><span>🌷</span><span>🌲</span><span>🌼</span><span>🌳</span><span>🍄</span><span>🌲</span><span>🌷</span></div>
+      <div class="set" id="sc1"></div>
+      <div class="set" id="sc2"></div>
     </div>
+    <div class="deco" id="deco" aria-hidden="true"></div>
     <div class="bubble" id="bubble" aria-live="polite"></div>
 
     <div class="petpos">
-      <button class="petwrap" id="petbtn" type="button" aria-label="Tocar a la mascota">
-        <svg id="pet" viewBox="0 0 200 210" data-eyes="open" data-mouth="smile" data-mood="ok" data-spots="0" aria-hidden="true">
-          <ellipse cx="100" cy="198" rx="64" ry="9" fill="rgba(0,0,0,0.14)"/>
-          <circle class="c-dark" cx="50" cy="54" r="26"/>
-          <circle cx="50" cy="54" r="13" fill="#ffb3c1"/>
-          <circle class="c-dark" cx="150" cy="54" r="26"/>
-          <circle cx="150" cy="54" r="13" fill="#ffb3c1"/>
-          <ellipse class="c-dark" cx="68" cy="186" rx="25" ry="13"/>
-          <ellipse class="c-dark" cx="132" cy="186" rx="25" ry="13"/>
-          <ellipse class="c-dark" cx="28" cy="132" rx="14" ry="24" transform="rotate(14 28 132)"/>
-          <ellipse class="c-dark" cx="172" cy="132" rx="14" ry="24" transform="rotate(-14 172 132)"/>
-          <ellipse class="c-body" cx="100" cy="118" rx="74" ry="70"/>
-          <ellipse class="c-light" cx="100" cy="142" rx="44" ry="38"/>
-          <circle id="s0" class="spot" cx="64" cy="88" r="10"/>
-          <circle id="s1" class="spot" cx="136" cy="150" r="9"/>
-          <circle id="s2" class="spot" cx="104" cy="172" r="8"/>
-          <circle cx="58" cy="124" r="11" fill="#ff9aa8" opacity="0.7"/>
-          <circle cx="142" cy="124" r="11" fill="#ff9aa8" opacity="0.7"/>
-          <g class="e-open">
-            <circle cx="76" cy="102" r="11" fill="#1b2a55"/><circle cx="124" cy="102" r="11" fill="#1b2a55"/>
-            <circle cx="80" cy="98" r="4" fill="#fff"/><circle cx="128" cy="98" r="4" fill="#fff"/>
-          </g>
-          <g class="e-closed" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round">
-            <path d="M64 104 Q76 94 88 104"/><path d="M112 104 Q124 94 136 104"/>
-          </g>
-          <g class="brows" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round">
-            <path d="M64 84 L88 90"/><path d="M136 84 L112 90"/>
-          </g>
-          <ellipse cx="100" cy="118" rx="6" ry="4.5" fill="#1b2a55"/>
-          <path class="m-smile" d="M84 128 Q100 146 116 128" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"/>
-          <g class="m-open"><ellipse cx="100" cy="136" rx="15" ry="13" fill="#7a2b3a"/><ellipse cx="100" cy="143" rx="9" ry="6" fill="#ff8fa0"/></g>
-          <path class="m-sad" d="M86 140 Q100 126 114 140" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"/>
+      <button class="petwrap" id="eggbtn" type="button" aria-label="Tocar el huevo" hidden>
+        <svg id="egg" viewBox="-24 -14 248 228" data-crack="0" aria-hidden="true">
+          <ellipse cx="100" cy="198" rx="58" ry="9" fill="rgba(0,0,0,0.14)"/>
+          <path d="M100 30 C150 30 168 110 168 140 C168 180 138 196 100 196 C62 196 32 180 32 140 C32 110 50 30 100 30 Z" fill="#fff4d6" stroke="#e8d3a0" stroke-width="4"/>
+          <circle cx="74" cy="96" r="11" fill="var(--pet)"/>
+          <circle cx="126" cy="128" r="13" fill="var(--pet)"/>
+          <circle cx="82" cy="158" r="9" fill="var(--pet)"/>
+          <circle cx="118" cy="78" r="7" fill="var(--pet)"/>
+          <path class="cr c1" d="M96 42 L108 66 L96 82 L106 100"/>
+          <path class="cr c2" d="M58 120 L76 128 L72 146"/>
+          <path class="cr c3" d="M142 112 L124 124 L132 144"/>
+          <path class="cr c4" d="M70 170 L92 162 L106 178 L130 166"/>
         </svg>
       </button>
+      <button class="petwrap" id="petbtn" type="button" aria-label="Tocar a la mascota" hidden><span id="petslot"></span></button>
     </div>
 
     <button class="poop" id="poop" type="button" aria-label="Limpiar la caca" hidden>💩</button>
@@ -226,16 +293,30 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
     <span class="moon" aria-hidden="true">🌙</span>
     <span class="zzz" aria-hidden="true">Z z z</span>
     <button id="wake" type="button" hidden>☀️ Despertar</button>
+
+    <div class="reveal" id="reveal" hidden>
+      <div class="rv-t" id="rvT"></div>
+      <div class="rv-i" id="rvI"></div>
+      <div class="rv-s" id="rvS"></div>
+      <div class="rv-b"><button id="rvOk" type="button">¡Genial!</button><button class="alt" id="rvWear" type="button" hidden>Ponérselo</button></div>
+    </div>
   </div>
 
   <div class="dock">
-    <div id="v-main" class="grid3">
-      <button class="act tile a1" type="button" data-act="eat"><span class="e" aria-hidden="true">🍎</span>Comer</button>
-      <button class="act tile a2" type="button" data-act="bath"><span class="e" aria-hidden="true">🛁</span>Bañar</button>
-      <button class="act tile a3" type="button" data-act="play"><span class="e" aria-hidden="true">🎾</span>Jugar</button>
-      <button class="act tile a4" type="button" data-act="walk"><span class="e" aria-hidden="true">🌳</span>Pasear</button>
-      <button class="act tile a5" type="button" data-act="sleep"><span class="e" aria-hidden="true">😴</span>Dormir</button>
-      <button class="act tile a6" type="button" data-act="talk"><span class="e" aria-hidden="true">🗣️</span>Hablar</button>
+    <div id="v-main">
+      <div class="grid3">
+        <button class="tile a1" type="button" data-act="eat"><span class="e" aria-hidden="true">🍎</span>Comer</button>
+        <button class="tile a2" type="button" data-act="bath"><span class="e" aria-hidden="true">🛁</span>Bañar</button>
+        <button class="tile a3" type="button" data-act="play"><span class="e" aria-hidden="true">🎾</span>Jugar</button>
+        <button class="tile a4" type="button" data-act="walk"><span class="e" aria-hidden="true">🌳</span>Pasear</button>
+        <button class="tile a5" type="button" data-act="sleep"><span class="e" aria-hidden="true">😴</span>Dormir</button>
+        <button class="tile a6" type="button" data-act="talk"><span class="e" aria-hidden="true">🗣️</span>Hablar</button>
+      </div>
+      <div class="grid3 row2">
+        <button class="tile b1" type="button" data-act="shop"><span class="e" aria-hidden="true">👕</span>Ropa<span class="badge" id="bd-shop" hidden>¡Nuevo!</span></button>
+        <button class="tile b2" type="button" data-act="quests"><span class="e" aria-hidden="true">🎯</span>Retos<span class="badge" id="bd-q" hidden></span></button>
+        <button class="tile b3" type="button" data-act="ach"><span class="e" aria-hidden="true">🏆</span>Logros</button>
+      </div>
     </div>
 
     <div id="v-food" hidden>
@@ -254,7 +335,24 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
         <input id="said" type="text" maxlength="60" placeholder="Escribe algo y lo repite" autocomplete="off" aria-label="Frase para que la mascota repita">
         <button type="submit">Repetir</button>
       </form>
-      <p class="note">Tu mascota no puede escuchar el micrófono. Toca un dibujo, o que un adulto escriba una frase, y la repite con su voz graciosa.</p>
+      <p class="note">Tu mascota no puede escuchar el micrófono. Toca un dibujo, o que un adulto escriba una frase, y la repite con su voz.</p>
+      <button class="close" type="button" data-close>Volver</button>
+    </div>
+
+    <div id="v-shop" hidden>
+      <div class="tabs" id="tabs"></div>
+      <div class="sheet"><div class="items" id="items"></div></div>
+      <button class="close" type="button" data-close>Volver</button>
+    </div>
+
+    <div id="v-quests" hidden>
+      <div class="sheet"><div class="qlist" id="qlist"></div>
+      <button class="chest" id="chest" type="button"><span class="e" aria-hidden="true">🎁</span><span id="chestT">Cofre sorpresa</span></button></div>
+      <button class="close" type="button" data-close>Volver</button>
+    </div>
+
+    <div id="v-ach" hidden>
+      <div class="sheet"><div class="agrid" id="agrid"></div></div>
       <button class="close" type="button" data-close>Volver</button>
     </div>
   </div>
@@ -266,7 +364,7 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
       <input id="nameIn" type="text" maxlength="12" autocomplete="off">
     </div>
     <div class="set-row" id="swatches"><span>Color</span></div>
-    <p class="note">La mascota se guarda en este dispositivo. Si pasa tiempo sin jugar tendrá algo de hambre, pero nunca se pone enferma.</p>
+    <p class="note">La mascota se guarda en este dispositivo. Si pasa tiempo sin jugar tendrá algo de hambre, pero nunca se pone enferma. Las monedas se comparten con el juego de Alan.</p>
     <button class="reset" id="reset" type="button">Empezar de nuevo</button>
   </details>
 </div>
@@ -274,7 +372,7 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
 <script>
 (function () {
   var $ = function (s) { return document.querySelector(s); };
-  var KEY = 'mascota-v1';
+  var KEY = 'mascota-v1', WK = 'peques-cartera-v1', AK = 'alan-v1';
   var PAL = [
     { n: 'Coral', p: '#ff8a7a', d: '#e8695a', l: '#ffd9cf' },
     { n: 'Menta', p: '#62d6b3', d: '#3fb894', l: '#d6f7ec' },
@@ -282,61 +380,362 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
     { n: 'Violeta', p: '#a995ff', d: '#8571ee', l: '#e6e0ff' },
     { n: 'Cielo', p: '#6cb8ff', d: '#4a96e6', l: '#dcefff' }
   ];
-  var DEF = { name: 'Pompi', color: 0, fed: 70, clean: 85, fun: 70, energy: 85, poop: false, t: Date.now() };
-  var S = JSON.parse(JSON.stringify(DEF));
-  var busy = false, sleeping = false, talking = false, lastNeed = 0, bubbleT = null, sleepT = null;
-  var stage = $('#stage'), svg = $('#pet'), petwrap = $('#petbtn');
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  var DEF = {
+    name: 'Pompi', color: 0, fed: 70, clean: 85, fun: 70, energy: 85, poop: false, t: Date.now(),
+    hatched: false, eggTaps: 0, cp: 0,
+    owned: ['x_bow', 'b_meadow'],
+    eq: { hat: '', glasses: '', outfit: '', shoes: '', extra: 'x_bow', scene: 'b_meadow', deco: '' },
+    cnt: {}, ach: {}, newIt: [], q: null
+  };
+  var S = clone(DEF);
+  var busy = false, sleeping = false, talking = false, lastNeed = 0, bubbleT = null, sleepT = null, sleepTicks = 0, sleepE0 = 0;
+  var coins = 20, coinsInit = false, tab = 'hat', svg = null, reveals = [], revShowing = null;
+  var stage = $('#stage'), petbtn = $('#petbtn'), eggbtn = $('#eggbtn'), wrapEl = $('.wrap');
 
   function cl(v) { return Math.max(0, Math.min(100, v)); }
   function rnd(n) { return Math.floor(Math.random() * n); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function wait(fn, ms) { return setTimeout(fn, ms); }
 
+  /* ---------- Dibujo de la mascota y la ropa ---------- */
+  var BX = 100, BY = 118, RX = 74, RY = 70;
+  function hw(y) { var d = (y - BY) / RY; return RX * Math.sqrt(Math.max(0, 1 - d * d)); }
+  function lower(y, fill) { var w = hw(y); return '<path d="M' + (BX - w).toFixed(1) + ' ' + y + ' A' + RX + ' ' + RY + ' 0 0 0 ' + (BX + w).toFixed(1) + ' ' + y + ' Z" fill="' + fill + '"/>'; }
+  function band(y1, y2, fill) {
+    var a = hw(y1), b = hw(y2);
+    return '<path d="M' + (BX - a).toFixed(1) + ' ' + y1 + ' L' + (BX + a).toFixed(1) + ' ' + y1 + ' A' + RX + ' ' + RY + ' 0 0 1 ' + (BX + b).toFixed(1) + ' ' + y2 + ' L' + (BX - b).toFixed(1) + ' ' + y2 + ' A' + RX + ' ' + RY + ' 0 0 1 ' + (BX - a).toFixed(1) + ' ' + y1 + ' Z" fill="' + fill + '"/>';
+  }
+  function star(cx, cy, R, r, fill, stroke) {
+    var p = [], i, a, rad;
+    for (i = 0; i < 10; i++) { a = -Math.PI / 2 + i * Math.PI / 5; rad = i % 2 ? r : R; p.push((cx + rad * Math.cos(a)).toFixed(1) + ',' + (cy + rad * Math.sin(a)).toFixed(1)); }
+    return '<polygon points="' + p.join(' ') + '" fill="' + fill + '"' + (stroke ? ' stroke="' + stroke + '" stroke-width="2"' : '') + '/>';
+  }
+  function heart(cx, cy, s, fill, stroke) {
+    return '<path d="M' + cx + ' ' + (cy + 10 * s) + ' C' + (cx - 18 * s) + ' ' + (cy - 2 * s) + ' ' + (cx - 12 * s) + ' ' + (cy - 18 * s) + ' ' + cx + ' ' + (cy - 8 * s) + ' C' + (cx + 12 * s) + ' ' + (cy - 18 * s) + ' ' + (cx + 18 * s) + ' ' + (cy - 2 * s) + ' ' + cx + ' ' + (cy + 10 * s) + ' Z" fill="' + fill + '"' + (stroke ? ' stroke="' + stroke + '" stroke-width="2"' : '') + '/>';
+  }
+  function feet(fn) { return fn(68) + fn(132); }
+
+  var ITEMS = {}, SLOTS = ['hat', 'glasses', 'outfit', 'shoes', 'extra', 'scene', 'deco'];
+  var TABE = { hat: '🎩', glasses: '🕶️', outfit: '👕', shoes: '👟', extra: '🎀', scene: '🏞️', deco: '🧸' };
+  var VB = { hat: '0 -14 200 120', glasses: '20 62 160 90', outfit: '0 104 200 106', shoes: '10 146 180 70', extra: '-24 -14 248 228' };
+  function add(id, slot, name, price, o) { o = o || {}; o.id = id; o.slot = slot; o.name = name; o.price = price; ITEMS[id] = o; }
+
+  /* Gorros */
+  add('h_cap', 'hat', 'Gorra', 12, { svg: '<path d="M64 60 Q64 30 100 30 Q136 30 136 60 Z" fill="#e63946"/><path d="M116 58 Q148 50 162 64 Q136 68 116 62 Z" fill="#b91d2b"/><circle cx="100" cy="31" r="4" fill="#b91d2b"/>' });
+  add('h_flower', 'hat', 'Flores', 15, { svg: [58, 72, 86, 100, 114, 128, 142].map(function (x, i) { var y = [62, 52, 46, 44, 46, 52, 62][i], c = ['#ff8fb8', '#ffffff', '#ffd23f'][i % 3]; return '<circle cx="' + x + '" cy="' + y + '" r="8" fill="' + c + '"/><circle cx="' + x + '" cy="' + y + '" r="3" fill="#ff8a3d"/>'; }).join('') + '<path d="M62 64 Q100 46 138 64" fill="none" stroke="#4fbf5e" stroke-width="3"/>' });
+  add('h_party', 'hat', 'Fiesta', 20, { svg: '<path d="M72 60 L100 4 L128 60 Z" fill="#a995ff"/><path d="M86 36 L114 36 L120 48 L80 48 Z" fill="#ffc43d"/><circle cx="100" cy="6" r="7" fill="#ff6fb5"/><circle cx="92" cy="54" r="3" fill="#fff"/><circle cx="110" cy="52" r="3" fill="#fff"/><rect x="70" y="58" width="60" height="6" rx="3" fill="#7a63e0"/>' });
+  add('h_pirate', 'hat', 'Pirata', 35, { svg: '<path d="M56 58 Q70 20 100 24 Q130 20 144 58 Q100 46 56 58 Z" fill="#2b2b3a"/><path d="M56 58 Q100 46 144 58 L144 63 Q100 51 56 63 Z" fill="#e6a615"/><circle cx="100" cy="38" r="8" fill="#fff"/><circle cx="97" cy="37" r="2" fill="#2b2b3a"/><circle cx="103" cy="37" r="2" fill="#2b2b3a"/><path d="M90 48 L110 54 M110 48 L90 54" stroke="#fff" stroke-width="3" stroke-linecap="round"/>' });
+  add('h_wizard', 'hat', 'Mago', 45, { svg: '<path d="M70 58 L104 2 L132 58 Z" fill="#5b3fd1"/><ellipse cx="100" cy="58" rx="44" ry="8" fill="#4a31b0"/>' + star(102, 34, 9, 4, '#ffd23f') + star(88, 50, 5, 2, '#ffd23f') + star(118, 48, 5, 2, '#ffd23f') });
+  add('h_chef', 'hat', 'Cocinero', null, { svg: '<circle cx="82" cy="36" r="16" fill="#fff"/><circle cx="100" cy="28" r="18" fill="#fff"/><circle cx="118" cy="36" r="16" fill="#fff"/><rect x="70" y="42" width="60" height="20" rx="4" fill="#f4f4f4" stroke="#d9d9d9" stroke-width="2"/>' });
+  add('h_night', 'hat', 'Dormir', null, { svg: '<path d="M64 60 Q62 24 100 24 Q130 24 136 60 Z" fill="#7cc4ff"/><path d="M128 34 Q158 40 156 76" stroke="#7cc4ff" stroke-width="14" fill="none" stroke-linecap="round"/><circle cx="156" cy="80" r="9" fill="#fff"/><path d="M64 60 Q100 52 136 60 L136 68 Q100 60 64 68 Z" fill="#fff"/>' });
+  add('h_astro', 'hat', 'Astronauta', null, { svg: '<circle cx="100" cy="112" r="88" fill="rgba(190,225,255,0.28)" stroke="#e6edf8" stroke-width="7"/><path d="M52 60 Q70 34 98 30" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.7"/><rect x="28" y="172" width="144" height="14" rx="7" fill="#dfe6f2" stroke="#b8c2d6" stroke-width="3"/>' });
+  add('h_crown', 'hat', 'Corona', null, { svg: '<path d="M66 58 L70 26 L84 44 L100 18 L116 44 L130 26 L134 58 Z" fill="#ffc43d" stroke="#e6a615" stroke-width="3"/><circle cx="100" cy="48" r="4" fill="#e63946"/><circle cx="82" cy="50" r="3" fill="#2f5fd0"/><circle cx="118" cy="50" r="3" fill="#2bb673"/>' });
+
+  /* Gafas */
+  add('g_round', 'glasses', 'Redondas', 10, { svg: '<circle cx="76" cy="102" r="16" fill="rgba(255,255,255,0.25)" stroke="#1b2a55" stroke-width="4"/><circle cx="124" cy="102" r="16" fill="rgba(255,255,255,0.25)" stroke="#1b2a55" stroke-width="4"/><path d="M92 102 L108 102 M60 100 L50 96 M140 100 L150 96" stroke="#1b2a55" stroke-width="4" stroke-linecap="round"/>' });
+  add('g_sun', 'glasses', 'De sol', 18, { svg: '<rect x="58" y="90" width="36" height="24" rx="9" fill="#1b2a55"/><rect x="106" y="90" width="36" height="24" rx="9" fill="#1b2a55"/><path d="M94 98 L106 98" stroke="#1b2a55" stroke-width="4"/><path d="M64 96 L74 94 M112 96 L122 94" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>' });
+  add('g_heart', 'glasses', 'Corazones', 25, { svg: heart(76, 102, 1.3, '#ff5a8a', '#c42a5b') + heart(124, 102, 1.3, '#ff5a8a', '#c42a5b') + '<path d="M92 98 L108 98" stroke="#c42a5b" stroke-width="4"/>' });
+  add('g_star', 'glasses', 'Estrellas', null, { svg: star(76, 102, 21, 9, '#ffc43d', '#e6a615') + star(124, 102, 21, 9, '#ffc43d', '#e6a615') + '<path d="M92 100 L108 100" stroke="#e6a615" stroke-width="4"/>' });
+  add('g_swim', 'glasses', 'Buceo', null, { svg: '<rect x="56" y="88" width="88" height="30" rx="14" fill="rgba(120,200,255,0.5)" stroke="#2f7fd0" stroke-width="5"/><path d="M100 88 L100 118" stroke="#2f7fd0" stroke-width="4"/><path d="M56 102 L40 98 M144 102 L160 98" stroke="#2f7fd0" stroke-width="5" stroke-linecap="round"/>' });
+
+  /* Trajes */
+  add('o_tshirt', 'outfit', 'Rayas', 15, { arm: '#e63946', svg: band(152, 162, '#e63946') + band(162, 172, '#ffffff') + band(172, 182, '#e63946') + band(182, 188, '#ffffff') });
+  add('o_overall', 'outfit', 'Peto', 25, { arm: '#ffd93d', svg: lower(148, '#4a7fd6') + '<rect x="72" y="136" width="10" height="16" fill="#4a7fd6"/><rect x="118" y="136" width="10" height="16" fill="#4a7fd6"/><rect x="88" y="164" width="24" height="14" rx="3" fill="#3a67b3"/><circle cx="77" cy="152" r="3.5" fill="#ffd23f"/><circle cx="123" cy="152" r="3.5" fill="#ffd23f"/>' });
+  add('o_dress', 'outfit', 'Vestido', 30, { svg: lower(150, '#ff8fb8') + band(150, 156, '#e6457f') + '<circle cx="70" cy="164" r="4" fill="#fff"/><circle cx="110" cy="170" r="4" fill="#fff"/><circle cx="130" cy="158" r="4" fill="#fff"/><circle cx="86" cy="176" r="3.5" fill="#fff"/>' });
+  add('o_tutu', 'outfit', 'Hada', 40, { svg: lower(150, '#ff6fb5') + '<ellipse cx="100" cy="176" rx="74" ry="13" fill="#ff9fe0"/><ellipse cx="100" cy="171" rx="60" ry="11" fill="#ffc2ee"/>' });
+  add('o_astro', 'outfit', 'Astronauta', 70, { arm: '#f2f4fa', svg: lower(150, '#f2f4fa') + band(162, 167, '#ff8a3d') + '<rect x="88" y="152" width="24" height="12" rx="3" fill="#b8c2d6"/><circle cx="94" cy="158" r="2.5" fill="#e63946"/><circle cx="106" cy="158" r="2.5" fill="#2f5fd0"/><circle cx="74" cy="172" r="5" fill="#e63946"/><circle cx="126" cy="172" r="5" fill="#2f5fd0"/>' });
+  add('o_hero', 'outfit', 'Superhéroe', null, { arm: '#2f5fd0', svg: lower(150, '#2f5fd0') + band(150, 156, '#ffc43d') + '<circle cx="100" cy="172" r="13" fill="#e63946"/>' + star(100, 172, 10, 4.5, '#ffd23f') });
+
+  /* Zapatos */
+  add('s_red', 'shoes', 'Zapatillas', 12, { svg: feet(function (x) { return '<ellipse cx="' + x + '" cy="187" rx="27" ry="14" fill="#e63946"/><ellipse cx="' + x + '" cy="195" rx="27" ry="5" fill="#ffffff"/><path d="M' + (x - 10) + ' 180 L' + (x + 10) + ' 180" stroke="#fff" stroke-width="3" stroke-linecap="round"/>'; }) });
+  add('s_boots', 'shoes', 'Botas', 18, { svg: feet(function (x) { return '<rect x="' + (x - 16) + '" y="166" width="32" height="24" rx="6" fill="#ffc43d"/><ellipse cx="' + x + '" cy="192" rx="28" ry="10" fill="#e6a615"/>'; }) });
+  add('s_fins', 'shoes', 'Aletas', 25, { svg: feet(function (x) { return '<ellipse cx="' + x + '" cy="194" rx="36" ry="9" fill="#ff9f1c"/><path d="M' + (x - 20) + ' 194 L' + (x + 20) + ' 194 M' + (x - 12) + ' 189 L' + (x - 12) + ' 199 M' + (x + 4) + ' 189 L' + (x + 4) + ' 199" stroke="#c46f00" stroke-width="2"/>'; }) });
+  add('s_sparkle', 'shoes', 'Brillantes', 30, { svg: feet(function (x) { return '<ellipse cx="' + x + '" cy="187" rx="27" ry="14" fill="#c9a6ff"/>' + star(x - 8, 184, 6, 2.5, '#fff') + star(x + 10, 190, 5, 2, '#fff'); }) });
+  add('s_gold', 'shoes', 'Doradas', null, { svg: feet(function (x) { return '<ellipse cx="' + x + '" cy="187" rx="27" ry="14" fill="#ffd23f" stroke="#e6a615" stroke-width="3"/><ellipse cx="' + (x - 8) + '" cy="182" rx="8" ry="3" fill="#fff" opacity="0.7"/>'; }) });
+
+  /* Extras */
+  add('x_bow', 'extra', 'Pajarita', 8, { svg: '<path d="M100 158 L76 146 L76 170 Z" fill="#e63946"/><path d="M100 158 L124 146 L124 170 Z" fill="#e63946"/><circle cx="100" cy="158" r="6" fill="#b91d2b"/>' });
+  add('x_scarf', 'extra', 'Bufanda', 15, { svg: band(146, 156, '#ff8a3d') + band(156, 160, '#ffffff') + '<rect x="114" y="150" width="16" height="30" rx="6" fill="#ff8a3d"/><rect x="114" y="164" width="16" height="4" fill="#fff"/>' });
+  add('x_neck', 'extra', 'Collar', 20, { svg: '<path d="M52 142 Q100 178 148 142" fill="none" stroke="#ff5a8a" stroke-width="3"/>' + heart(100, 166, 0.8, '#ff5a8a', '#c42a5b') });
+  add('x_cape', 'extra', 'Capa', 30, { back: '<path d="M42 100 Q16 150 26 198 L174 198 Q184 150 158 100 Z" fill="#e63946"/><path d="M60 110 Q40 150 46 196 L154 196 Q160 150 140 110 Z" fill="#b91d2b"/>', svg: '<circle cx="100" cy="150" r="6" fill="#ffd23f" stroke="#e6a615" stroke-width="2"/>' });
+  add('x_wings', 'extra', 'Alas', 40, { back: '<g transform="rotate(-22 14 92)"><ellipse cx="14" cy="92" rx="34" ry="54" fill="#c9a6ff"/><ellipse cx="16" cy="92" rx="18" ry="34" fill="#e6d9ff"/></g><g transform="rotate(22 186 92)"><ellipse cx="186" cy="92" rx="34" ry="54" fill="#c9a6ff"/><ellipse cx="184" cy="92" rx="18" ry="34" fill="#e6d9ff"/></g>', svg: '' });
+  add('x_medal', 'extra', 'Medalla', null, { svg: '<path d="M80 138 L100 160 L120 138" fill="none" stroke="#e63946" stroke-width="6"/><circle cx="100" cy="168" r="11" fill="#ffd23f" stroke="#e6a615" stroke-width="3"/>' + star(100, 168, 7, 3, '#e6a615') });
+
+  /* Paisajes */
+  var SCENES = {
+    b_meadow: { sky: '#bfe6ff', ground: '#9be38f', sc: ['🌳', '🌷', '🌲', '🌼', '🌳', '🍄', '🌲', '🌷'], cl: '☁️', e: '🌳' },
+    b_beach: { sky: '#8fdcff', ground: '#f2d18b', sc: ['🌴', '🐚', '⛱️', '🦀', '🌴', '🌊', '🏐', '🐚'], cl: '☁️', e: '🏖️' },
+    b_snow: { sky: '#cfe8ff', ground: '#f2f8ff', sc: ['⛄', '🌲', '❄️', '🎄', '🌲', '⛄', '❄️', '🎄'], cl: '❄️', e: '⛄' },
+    b_space: { sky: '#16225a', ground: '#8c94c0', sc: ['🚀', '🪐', '⭐', '🛸', '🌙', '☄️', '🪐', '⭐'], cl: '✨', e: '🚀' },
+    b_candy: { sky: '#ffd1f0', ground: '#ffb3d9', sc: ['🍭', '🍬', '🧁', '🍩', '🍦', '🍰', '🍭', '🍬'], cl: '☁️', e: '🍭' }
+  };
+  add('b_meadow', 'scene', 'Prado', 0, {});
+  add('b_beach', 'scene', 'Playa', 40, {});
+  add('b_snow', 'scene', 'Nieve', 40, {});
+  add('b_space', 'scene', 'Espacio', 80, {});
+  add('b_candy', 'scene', 'Dulces', null, {});
+
+  /* Decoración */
+  add('d_bear', 'deco', 'Osito', 10, { e: '🧸', size: 54, bottom: '4%' });
+  add('d_balloon', 'deco', 'Globos', 15, { e: '🎈', size: 58, bottom: '18%' });
+  add('d_kite', 'deco', 'Cometa', 20, { e: '🪁', size: 58, bottom: '40%' });
+  add('d_rainbow', 'deco', 'Arcoíris', 35, { e: '🌈', size: 96, bottom: '32%' });
+  add('d_train', 'deco', 'Tren', 45, { e: '🚂', size: 60, bottom: '4%' });
+  add('d_castle', 'deco', 'Castillo', 60, { e: '🏰', size: 84, bottom: '10%' });
+
+  function petSVG(eq, o) {
+    o = o || {};
+    var hat = eq.hat ? ITEMS[eq.hat] : null, gl = eq.glasses ? ITEMS[eq.glasses] : null, out = eq.outfit ? ITEMS[eq.outfit] : null;
+    var sh = eq.shoes ? ITEMS[eq.shoes] : null, ex = eq.extra ? ITEMS[eq.extra] : null;
+    var arm = out && out.arm ? out.arm : 'var(--pet-d)';
+    var s = '<svg ' + (o.id ? 'id="' + o.id + '" ' : '') + 'viewBox="' + (o.vb || '-24 -14 248 228') + '" data-eyes="open" data-mouth="smile" data-mood="ok" data-spots="0" aria-hidden="true">';
+    s += '<ellipse cx="100" cy="198" rx="64" ry="9" fill="rgba(0,0,0,0.14)"/>';
+    if (ex && ex.back) s += ex.back;
+    s += '<circle class="c-dark" cx="50" cy="54" r="26"/><circle cx="50" cy="54" r="13" fill="#ffb3c1"/>';
+    s += '<circle class="c-dark" cx="150" cy="54" r="26"/><circle cx="150" cy="54" r="13" fill="#ffb3c1"/>';
+    s += '<ellipse class="c-dark" cx="68" cy="186" rx="25" ry="13"/><ellipse class="c-dark" cx="132" cy="186" rx="25" ry="13"/>';
+    s += '<ellipse cx="28" cy="132" rx="14" ry="24" transform="rotate(14 28 132)" fill="' + arm + '"/>';
+    s += '<ellipse cx="172" cy="132" rx="14" ry="24" transform="rotate(-14 172 132)" fill="' + arm + '"/>';
+    s += '<ellipse class="c-body" cx="100" cy="118" rx="74" ry="70"/><ellipse class="c-light" cx="100" cy="142" rx="44" ry="38"/>';
+    s += '<circle class="spot sp0" cx="64" cy="88" r="10"/><circle class="spot sp1" cx="136" cy="150" r="9"/><circle class="spot sp2" cx="104" cy="172" r="8"/>';
+    s += '<circle cx="58" cy="124" r="11" fill="#ff9aa8" opacity="0.7"/><circle cx="142" cy="124" r="11" fill="#ff9aa8" opacity="0.7"/>';
+    if (out) s += out.svg;
+    if (sh) s += sh.svg;
+    s += '<g class="e-open"><circle cx="76" cy="102" r="11" fill="#1b2a55"/><circle cx="124" cy="102" r="11" fill="#1b2a55"/><circle cx="80" cy="98" r="4" fill="#fff"/><circle cx="128" cy="98" r="4" fill="#fff"/></g>';
+    s += '<g class="e-closed" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"><path d="M64 104 Q76 94 88 104"/><path d="M112 104 Q124 94 136 104"/></g>';
+    s += '<g class="brows" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"><path d="M64 84 L88 90"/><path d="M136 84 L112 90"/></g>';
+    s += '<ellipse cx="100" cy="118" rx="6" ry="4.5" fill="#1b2a55"/>';
+    s += '<path class="m-smile" d="M84 128 Q100 146 116 128" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"/>';
+    s += '<g class="m-open"><ellipse cx="100" cy="136" rx="15" ry="13" fill="#7a2b3a"/><ellipse cx="100" cy="143" rx="9" ry="6" fill="#ff8fa0"/></g>';
+    s += '<path class="m-sad" d="M86 140 Q100 126 114 140" fill="none" stroke="#1b2a55" stroke-width="5" stroke-linecap="round"/>';
+    if (ex && ex.svg) s += ex.svg;
+    if (gl) s += gl.svg;
+    if (hat) s += hat.svg;
+    return s + '</svg>';
+  }
+  function preview(id) {
+    var it = ITEMS[id];
+    if (it.slot === 'scene') { var sc = SCENES[id]; return '<span class="sc" style="background:linear-gradient(' + sc.sky + ' 0 60%, ' + sc.ground + ' 60% 100%)">' + sc.e + '</span>'; }
+    if (it.slot === 'deco') return '<span style="font-size:42px">' + it.e + '</span>';
+    var eq = {}; eq[it.slot] = id;
+    return petSVG(eq, { vb: VB[it.slot] });
+  }
+  function renderPet() {
+    $('#petslot').innerHTML = petSVG(S.eq, { id: 'pet' });
+    svg = $('#pet');
+    face();
+  }
+
+  /* ---------- Sonidos y voz ---------- */
+  function speak(t, pitch) {
+    if (window.VOZ) { VOZ.speak(t, { rate: 1.05, pitch: pitch || 1.9 }); return; }
+    try {
+      if (!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t);
+      u.lang = 'es-ES'; u.rate = 1.0; u.pitch = pitch || 1.2;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  var ac;
+  function getAc() { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); return ac; }
+  function tone(f, d, type, when) {
+    try {
+      var a = getAc(), o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + (when || 0);
+      o.type = type || 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.2, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + d);
+      o.connect(g); g.connect(a.destination);
+      o.start(t0); o.stop(t0 + d);
+    } catch (e) {}
+  }
+  function good() { tone(523, 0.12, 'triangle'); tone(659, 0.12, 'triangle', 0.12); tone(784, 0.22, 'triangle', 0.24); }
+  function pop() { tone(300 + Math.random() * 400, 0.09, 'square'); }
+  function oops() { tone(220, 0.22, 'sine'); }
+  function fanfare() { [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, 0.16, 'triangle', i * 0.1); }); }
+  function sCoin() { tone(880, 0.07, 'triangle'); tone(1320, 0.12, 'triangle', 0.06); }
+  function sFart() {
+    try {
+      var a = getAc(), t0 = a.currentTime, base = 85 + Math.random() * 50, dur = 0.5 + Math.random() * 0.3, i;
+      var o = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain();
+      o.type = 'sawtooth'; o2.type = 'square';
+      o.frequency.setValueAtTime(base, t0); o.frequency.exponentialRampToValueAtTime(base * 0.4, t0 + dur);
+      o2.frequency.setValueAtTime(base * 1.97, t0); o2.frequency.exponentialRampToValueAtTime(base * 0.8, t0 + dur);
+      var n = Math.floor(dur * 30);
+      for (i = 0; i < n; i++) g.gain.setValueAtTime(i % 2 ? 0.07 : 0.22, t0 + i * dur / n);
+      g.gain.setValueAtTime(0.0001, t0 + dur);
+      o.connect(g); o2.connect(g); g.connect(a.destination);
+      o.start(t0); o2.start(t0); o.stop(t0 + dur + 0.02); o2.stop(t0 + dur + 0.02);
+    } catch (e) {}
+  }
+
+  /* ---------- Guardado y monedas ---------- */
   function save() { try { S.t = Date.now(); localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function load() {
     try {
       var r = localStorage.getItem(KEY);
       if (!r) return;
       var o = JSON.parse(r);
-      ['name', 'color', 'fed', 'clean', 'fun', 'energy', 'poop', 't'].forEach(function (k) { if (o[k] !== undefined) S[k] = o[k]; });
-      var el = Math.min(Date.now() - S.t, 4 * 3600e3);
-      if (!(el > 0)) el = 0;
-      var ticks = el / 10000 * 0.1;
-      S.fed = Math.max(20, S.fed - 0.8 * ticks);
-      S.fun = Math.max(20, S.fun - 1.0 * ticks);
-      S.energy = Math.max(25, S.energy - 0.5 * ticks);
-      S.clean = Math.max(20, S.clean - 0.4 * ticks);
+      ['name', 'color', 'fed', 'clean', 'fun', 'energy', 'poop', 't', 'hatched', 'eggTaps', 'cp'].forEach(function (k) { if (o[k] !== undefined) S[k] = o[k]; });
+      ['owned', 'newIt'].forEach(function (k) { if (Array.isArray(o[k])) S[k] = o[k]; });
+      ['eq', 'cnt', 'ach'].forEach(function (k) { if (o[k] && typeof o[k] === 'object') for (var j in o[k]) S[k][j] = o[k][j]; });
+      if (o.q && o.q.list) S.q = o.q;
       if (typeof S.name !== 'string' || !S.name) S.name = 'Pompi';
       if (!PAL[S.color]) S.color = 0;
+      S.owned = S.owned.filter(function (id) { return ITEMS[id]; });
+      if (S.owned.indexOf('b_meadow') < 0) S.owned.push('b_meadow');
+      SLOTS.forEach(function (sl) { var id = S.eq[sl]; if (id && (!ITEMS[id] || ITEMS[id].slot !== sl || S.owned.indexOf(id) < 0)) S.eq[sl] = sl === 'scene' ? 'b_meadow' : ''; });
+      if (S.hatched) {
+        var el = Math.min(Date.now() - S.t, 4 * 3600e3);
+        if (!(el > 0)) el = 0;
+        var ticks = el / 10000 * 0.1;
+        S.fed = Math.max(20, S.fed - 0.8 * ticks);
+        S.fun = Math.max(20, S.fun - 1.0 * ticks);
+        S.energy = Math.max(25, S.energy - 0.5 * ticks);
+        S.clean = Math.max(20, S.clean - 0.4 * ticks);
+      }
     } catch (e) {}
+  }
+  function readWallet() { try { var w = JSON.parse(localStorage.getItem(WK)); if (w && typeof w.coins === 'number') return w.coins; } catch (e) {} return null; }
+  function writeWallet() { try { localStorage.setItem(WK, JSON.stringify({ coins: coins })); } catch (e) {} }
+  function syncWallet() {
+    var c = readWallet();
+    if (c !== null) coins = c; else if (!coinsInit) { coins = 20; writeWallet(); }
+    coinsInit = true;
+  }
+  function coinFly(n) {
+    var e = document.createElement('div');
+    e.className = 'coinfly'; e.textContent = '+' + n + ' 🪙';
+    stage.appendChild(e);
+    wait(function () { e.remove(); }, 1500);
+    var w = $('#wallet'); w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump');
+    sCoin();
+  }
+  function addCoins(n, quiet) {
+    syncWallet(); coins = Math.max(0, coins + n); writeWallet();
+    if (!quiet && n > 0) coinFly(n);
+    ui();
+  }
+  function spend(n) { syncWallet(); if (coins < n) return false; coins -= n; writeWallet(); ui(); return true; }
+  function alanDone() { try { var s = JSON.parse(localStorage.getItem(AK)); return s && s.done ? Object.keys(s.done).length : 0; } catch (e) { return 0; } }
+
+  /* ---------- Crecimiento ---------- */
+  var SCL = [1, 0.62, 0.8, 1], STN = ['Huevo', 'Bebé', 'Peque', 'Grande'], STE = ['🥚', '🐣', '🐥', '🌟'];
+  function stageNum() { return !S.hatched ? 0 : S.cp >= 100 ? 3 : S.cp >= 30 ? 2 : 1; }
+  function addCP(n) {
+    var b = stageNum(); S.cp += n; var a = stageNum();
+    if (a > b) {
+      addCoins(a === 2 ? 15 : 30, true);
+      fanfare(); hearts();
+      showReveal('¡' + S.name + ' ha crecido!', petSVG(S.eq, {}), 'Ahora es ' + STN[a].toLowerCase() + '. ¡+' + (a === 2 ? 15 : 30) + ' 🪙!');
+      speak('¡' + S.name + ' ha crecido!');
+    }
   }
 
-  /* Voz y sonidos */
-  function speak(t, pitch) {
-    try {
-      if (!('speechSynthesis' in window)) return;
-      speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(t);
-      u.lang = 'es-ES'; u.rate = 1.05; u.pitch = pitch || 1.9;
-      speechSynthesis.speak(u);
-    } catch (e) {}
+  /* ---------- Retos y logros ---------- */
+  var QP = [
+    { k: 'eat', e: '🍎', n: 3, t: 'Dar de comer 3 veces' },
+    { k: 'bath', e: '🛁', n: 2, t: 'Bañar 2 veces' },
+    { k: 'play', e: '🎾', n: 1, t: 'Jugar a la pelota' },
+    { k: 'walk', e: '🌳', n: 1, t: 'Dar un paseo' },
+    { k: 'sleep', e: '😴', n: 1, t: 'Echar una siesta' },
+    { k: 'catch', e: '🦋', n: 4, t: 'Atrapar 4 bichitos en el paseo' },
+    { k: 'bubble', e: '🫧', n: 8, t: 'Explotar 8 burbujas' },
+    { k: 'tap', e: '👆', n: 8, t: 'Hacerle 8 cosquillas' },
+    { k: 'talk', e: '🗣️', n: 3, t: 'Hablar 3 veces' },
+    { k: 'dress', e: '👕', n: 1, t: 'Cambiarle de ropa' }
+  ];
+  var ACH = [
+    { id: 'a_eat', e: '🍎', t: 'Dar de comer 20 veces', k: 'eat', n: 20, r: 'h_chef' },
+    { id: 'a_bath', e: '🛁', t: 'Bañar 10 veces', k: 'bath', n: 10, r: 'g_swim' },
+    { id: 'a_walk', e: '🌳', t: 'Pasear 10 veces', k: 'walk', n: 10, r: 'g_star' },
+    { id: 'a_play', e: '🎾', t: 'Jugar 15 veces', k: 'play', n: 15, r: 's_gold' },
+    { id: 'a_sleep', e: '😴', t: 'Dormir 8 veces', k: 'sleep', n: 8, r: 'h_night' },
+    { id: 'a_tap', e: '👆', t: 'Hacerle 40 cosquillas', k: 'tap', n: 40, r: 'x_medal' },
+    { id: 'a_quest', e: '🎯', t: 'Cumplir 10 retos', k: 'quests', n: 10, r: 'h_astro' },
+    { id: 'a_chest', e: '🎁', t: 'Abrir 3 cofres', k: 'chests', n: 3, r: 'b_candy' },
+    { id: 'a_alan', e: '🧢', t: 'Pasar 3 niveles con Alan', fn: 'alan', n: 3, r: 'o_hero' },
+    { id: 'a_big', e: '🌟', t: 'Hacerse grande', fn: 'big', n: 1, r: 'h_crown' }
+  ];
+  function todayKey() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function ensureQuests() {
+    var k = todayKey();
+    if (S.q && S.q.d === k && S.q.list && S.q.list.length === 3) return;
+    var h = 7, i;
+    for (i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+    var pool = QP.slice(), list = [];
+    while (list.length < 3) {
+      h = (h * 1664525 + 1013904223) >>> 0;
+      var q = pool.splice(h % pool.length, 1)[0];
+      list.push({ k: q.k, n: q.n, p: 0, done: false });
+    }
+    S.q = { d: k, list: list, chest: false, opened: false };
   }
-  var ac;
-  function tone(f, d, type, when) {
-    try {
-      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
-      var o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + (when || 0);
-      o.type = type || 'sine'; o.frequency.value = f;
-      g.gain.setValueAtTime(0.2, t0);
-      g.gain.exponentialRampToValueAtTime(0.001, t0 + d);
-      o.connect(g); g.connect(ac.destination);
-      o.start(t0); o.stop(t0 + d);
-    } catch (e) {}
+  function qInfo(k) { for (var i = 0; i < QP.length; i++) if (QP[i].k === k) return QP[i]; return QP[0]; }
+  function ev(kind, n) {
+    n = n || 1;
+    S.cnt[kind] = (S.cnt[kind] || 0) + n;
+    ensureQuests();
+    var finished = 0;
+    S.q.list.forEach(function (q) {
+      if (!q.done && q.k === kind) {
+        q.p = Math.min(q.n, q.p + n);
+        if (q.p >= q.n) { q.done = true; S.cnt.quests = (S.cnt.quests || 0) + 1; finished++; }
+      }
+    });
+    if (finished) {
+      addCoins(10 * finished, true);
+      wait(function () { coinFly(10 * finished); bubble('¡Reto cumplido!'); }, 900);
+      if (S.q.list.every(function (q) { return q.done; }) && !S.q.chest) { S.q.chest = true; wait(function () { bubble('¡Tienes un cofre sorpresa!'); speak('¡Tienes un cofre sorpresa!'); }, 2600); }
+    }
+    checkAch(); save(); badges();
   }
-  function good() { tone(523, 0.12, 'triangle'); tone(659, 0.12, 'triangle', 0.12); tone(784, 0.22, 'triangle', 0.24); }
-  function pop() { tone(300 + Math.random() * 400, 0.09, 'square'); }
+  function achVal(a) { return a.fn === 'alan' ? alanDone() : a.fn === 'big' ? (stageNum() >= 3 ? 1 : 0) : (S.cnt[a.k] || 0); }
+  function checkAch() {
+    ACH.forEach(function (a) {
+      if (S.ach[a.id]) return;
+      if (achVal(a) >= a.n) { S.ach[a.id] = true; unlock(a.r, '¡Logro conseguido!'); }
+    });
+  }
+  function unlock(id, title) {
+    if (S.owned.indexOf(id) < 0) { S.owned.push(id); S.newIt.push(id); }
+    fanfare();
+    showReveal(title, preview(id), ITEMS[id].name + ' ¡para ' + S.name + '!', id);
+    speak(title + ' ¡Nuevo: ' + ITEMS[id].name + '!');
+  }
+  function openChest() {
+    ensureQuests();
+    if (!S.q.chest || S.q.opened) return;
+    S.q.opened = true; S.cnt.chests = (S.cnt.chests || 0) + 1;
+    var pool = Object.keys(ITEMS).filter(function (id) { return ITEMS[id].price !== null && ITEMS[id].price > 0 && ITEMS[id].price <= 45 && S.owned.indexOf(id) < 0; });
+    if (pool.length) unlock(pool[rnd(pool.length)], '¡Cofre abierto!');
+    else { addCoins(30, true); fanfare(); showReveal('¡Cofre abierto!', '🪙', '¡+30 monedas!'); }
+    checkAch(); save(); renderQuests(); badges();
+  }
 
-  /* Mensajes y gestos */
+  /* ---------- Premios en pantalla ---------- */
+  function showReveal(title, html, sub, itemId) {
+    reveals.push({ t: title, h: html, s: sub || '', id: itemId || '' });
+    if (!revShowing) nextReveal();
+  }
+  function nextReveal() {
+    var r = reveals.shift();
+    if (!r) { revShowing = null; $('#reveal').hidden = true; badges(); return; }
+    revShowing = r;
+    $('#rvT').textContent = r.t; $('#rvI').innerHTML = r.h; $('#rvS').textContent = r.s;
+    var it = r.id ? ITEMS[r.id] : null;
+    $('#rvWear').hidden = !(it && S.eq[it.slot] !== r.id);
+    $('#reveal').hidden = false;
+  }
+  $('#rvOk').addEventListener('click', function () { nextReveal(); });
+  $('#rvWear').addEventListener('click', function () {
+    var r = revShowing;
+    if (r && r.id) { var it = ITEMS[r.id]; S.eq[it.slot] = r.id; equipDone(it, true); }
+    nextReveal();
+  });
+
+  /* ---------- Mensajes y gestos ---------- */
   function bubble(text) {
     var b = $('#bubble');
     b.textContent = text; b.classList.remove('off');
@@ -349,18 +748,18 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
     talking = true;
     var t = setInterval(function () {
       n++;
-      svg.setAttribute('data-mouth', n % 2 ? 'open' : 'smile');
+      if (svg) svg.setAttribute('data-mouth', n % 2 ? 'open' : 'smile');
       if (n * 180 >= ms) { clearInterval(t); talking = false; face(); }
     }, 180);
   }
   function jump() {
-    petwrap.classList.remove('jump'); void petwrap.offsetWidth; petwrap.classList.add('jump');
-    wait(function () { petwrap.classList.remove('jump'); }, 550);
+    petbtn.classList.remove('jump'); void petbtn.offsetWidth; petbtn.classList.add('jump');
+    wait(function () { petbtn.classList.remove('jump'); }, 550);
   }
-  function hearts() {
+  function hearts(sym) {
     for (var i = 0; i < 5; i++) {
       var h = document.createElement('span');
-      h.className = 'heart'; h.textContent = '❤️';
+      h.className = 'heart'; h.textContent = sym || '❤️';
       h.style.left = (36 + Math.random() * 28) + '%';
       h.style.top = (38 + Math.random() * 20) + '%';
       h.style.animationDelay = (i * 0.1) + 's';
@@ -369,15 +768,34 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
     }
   }
 
-  /* Pantalla */
+  /* ---------- Pantalla ---------- */
   function face() {
+    if (!svg) return;
     var m = Math.min(S.fed, S.clean, S.fun, S.energy);
     var avg = (S.fed + S.clean + S.fun + S.energy) / 4;
     svg.setAttribute('data-eyes', sleeping ? 'closed' : 'open');
     if (!talking) svg.setAttribute('data-mouth', sleeping ? 'smile' : (m < 25 ? 'sad' : 'smile'));
     svg.setAttribute('data-mood', m < 25 ? 'sad' : (avg >= 65 ? 'happy' : 'ok'));
+    var spots = S.clean < 40 ? 3 : S.clean < 65 ? 2 : S.clean < 85 ? 1 : 0;
+    svg.setAttribute('data-spots', spots);
   }
   var STATS = [['fed', 'Comida'], ['clean', 'Limpio'], ['fun', 'Juego'], ['energy', 'Energía']];
+  function growPct() {
+    var st = stageNum();
+    return st === 0 ? S.eggTaps / 5 * 100 : st === 1 ? S.cp / 30 * 100 : st === 2 ? (S.cp - 30) / 70 * 100 : 100;
+  }
+  function applyScene() {
+    var sc = SCENES[S.eq.scene] || SCENES.b_meadow, h = '', i;
+    stage.style.background = 'linear-gradient(' + sc.sky + ' 0 66%, ' + sc.ground + ' 66% 100%)';
+    for (i = 0; i < 8; i++) h += '<span>' + sc.sc[i % sc.sc.length] + '</span>';
+    $('#sc1').innerHTML = h; $('#sc2').innerHTML = h;
+    $('#cl1').textContent = sc.cl; $('#cl2').textContent = sc.cl;
+  }
+  function applyDeco() {
+    var d = $('#deco'), it = S.eq.deco ? ITEMS[S.eq.deco] : null;
+    if (!it) { d.textContent = ''; return; }
+    d.textContent = it.e; d.style.fontSize = it.size + 'px'; d.style.bottom = it.bottom;
+  }
   function ui() {
     STATS.forEach(function (s) {
       var v = Math.round(S[s[0]]), el = $('#st-' + s[0]);
@@ -386,29 +804,143 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
       f.classList.toggle('low', v < 25);
       el.setAttribute('aria-label', s[1] + ' ' + v + ' de 100');
     });
-    var spots = S.clean < 40 ? 3 : S.clean < 65 ? 2 : S.clean < 85 ? 1 : 0;
-    svg.setAttribute('data-spots', spots);
-    $('#poop').hidden = !S.poop;
+    var st = stageNum(), g = Math.round(Math.max(0, Math.min(100, growPct())));
+    $('#st-grow .fill').style.width = g + '%';
+    $('#growIc').textContent = STE[st]; $('#growNm').textContent = STN[st];
+    $('#st-grow').setAttribute('aria-label', 'Crecimiento: ' + STN[st] + ' ' + g + ' de 100');
+    $('#poop').hidden = !S.poop || !S.hatched;
     $('#title').textContent = S.name;
+    $('#coinN').textContent = coins;
     var p = PAL[S.color] || PAL[0];
-    svg.style.setProperty('--pet', p.p); svg.style.setProperty('--pet-d', p.d); svg.style.setProperty('--pet-l', p.l);
+    wrapEl.style.setProperty('--pet', p.p); wrapEl.style.setProperty('--pet-d', p.d); wrapEl.style.setProperty('--pet-l', p.l);
+    stage.style.setProperty('--sc', SCL[st]);
+    eggbtn.hidden = S.hatched; petbtn.hidden = !S.hatched;
+    $('#egg').setAttribute('data-crack', Math.min(4, S.eggTaps));
     document.querySelectorAll('.swatch').forEach(function (b, i) { b.setAttribute('aria-pressed', i === S.color ? 'true' : 'false'); });
     face();
   }
-  function lock(on) { document.querySelectorAll('.act').forEach(function (b) { b.disabled = on; }); }
-  function view(id) { ['main', 'food', 'talk'].forEach(function (v) { $('#v-' + v).hidden = v !== id; }); }
-  function done() { busy = false; lock(false); view('main'); save(); ui(); }
+  function badges() {
+    $('#bd-shop').hidden = !S.newIt.length;
+    ensureQuests();
+    var done = S.q.list.filter(function (q) { return q.done; }).length, b = $('#bd-q');
+    if (S.q.chest && !S.q.opened) { b.textContent = '🎁'; b.hidden = false; }
+    else if (done < 3) { b.textContent = done + '/3'; b.hidden = false; }
+    else b.hidden = true;
+  }
+  function lock(on) { document.querySelectorAll('#v-main .tile').forEach(function (b) { b.disabled = on; }); }
+  function view(id) {
+    ['main', 'food', 'talk', 'shop', 'quests', 'ach'].forEach(function (v) { $('#v-' + v).hidden = v !== id; });
+    if (id === 'shop') renderShop();
+    if (id === 'quests') renderQuests();
+    if (id === 'ach') renderAch();
+  }
+  function done() { busy = false; lock(false); view('main'); save(); ui(); badges(); }
 
-  /* Paso del tiempo */
+  /* ---------- Ropa y tienda ---------- */
+  function equipDone(it, skipEv) {
+    if (!skipEv) ev('dress');
+    if (it.slot === 'scene') applyScene();
+    if (it.slot === 'deco') applyDeco();
+    renderPet(); save(); ui();
+    if (!$('#v-shop').hidden) renderShop();
+    jump();
+  }
+  function tapItem(id, btn) {
+    var it = ITEMS[id], owned = S.owned.indexOf(id) >= 0;
+    if (owned) {
+      if (S.eq[it.slot] === id) { if (it.slot === 'scene') return; S.eq[it.slot] = ''; }
+      else S.eq[it.slot] = id;
+      pop(); equipDone(it);
+      return;
+    }
+    if (it.price === null) {
+      oops(); bubble('Se consigue con un logro 🏆'); speak('Se consigue con un logro');
+      btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+      return;
+    }
+    if (spend(it.price)) {
+      S.owned.push(id); S.eq[it.slot] = id;
+      good(); hearts('⭐'); equipDone(it);
+      say('¡Qué guay!');
+    } else {
+      oops(); bubble('Te faltan monedas'); speak('Te faltan monedas');
+      btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+    }
+  }
+  function renderTabs() {
+    var t = $('#tabs'); t.innerHTML = '';
+    SLOTS.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'tab'; b.textContent = TABE[s];
+      b.setAttribute('aria-label', { hat: 'Gorros', glasses: 'Gafas', outfit: 'Trajes', shoes: 'Zapatos', extra: 'Extras', scene: 'Paisajes', deco: 'Decoración' }[s]);
+      b.setAttribute('aria-pressed', s === tab ? 'true' : 'false');
+      b.addEventListener('click', function () { tab = s; renderShop(); });
+      t.appendChild(b);
+    });
+  }
+  function achOf(id) { for (var i = 0; i < ACH.length; i++) if (ACH[i].r === id) return ACH[i]; return null; }
+  function renderShop() {
+    renderTabs();
+    var g = $('#items'); g.innerHTML = '';
+    var ids = Object.keys(ITEMS).filter(function (id) { return ITEMS[id].slot === tab; });
+    ids.sort(function (a, b) {
+      var pa = ITEMS[a].price === null ? 999 : ITEMS[a].price, pb = ITEMS[b].price === null ? 999 : ITEMS[b].price;
+      return pa - pb;
+    });
+    var seen = [];
+    ids.forEach(function (id) {
+      var it = ITEMS[id], owned = S.owned.indexOf(id) >= 0, eqd = S.eq[it.slot] === id, isNew = S.newIt.indexOf(id) >= 0;
+      var a = achOf(id), stt;
+      if (eqd) stt = '✓ Puesto'; else if (owned) stt = 'Ponerlo'; else if (it.price === null) stt = '🔒 ' + (a ? a.e : '🏆'); else stt = '🪙 ' + it.price;
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'it' + (eqd ? ' eq' : '') + (owned ? '' : ' un');
+      b.setAttribute('aria-label', it.name + ', ' + (eqd ? 'puesto' : owned ? 'ponerlo' : it.price === null ? 'se consigue con un logro' : it.price + ' monedas'));
+      b.innerHTML = '<span class="pv">' + preview(id) + '</span><span class="nm">' + it.name + '</span><span class="st">' + stt + '</span>' + (isNew ? '<span class="nw">¡Nuevo!</span>' : '');
+      b.addEventListener('click', function () { tapItem(id, b); });
+      g.appendChild(b);
+      if (isNew) seen.push(id);
+    });
+    if (seen.length) { S.newIt = S.newIt.filter(function (id) { return seen.indexOf(id) < 0; }); save(); badges(); }
+  }
+  function renderQuests() {
+    ensureQuests();
+    var box = $('#qlist'); box.innerHTML = '';
+    S.q.list.forEach(function (q) {
+      var info = qInfo(q.k), d = document.createElement('div'), dots = '', i;
+      for (i = 0; i < q.n; i++) dots += '<span class="dot' + (i < q.p ? ' on' : '') + '"></span>';
+      d.className = 'q' + (q.done ? ' done' : '');
+      d.setAttribute('role', 'img'); d.setAttribute('aria-label', info.t + ': ' + q.p + ' de ' + q.n);
+      d.innerHTML = '<span class="qe" aria-hidden="true">' + info.e + '</span><span class="qb"><span class="qt">' + info.t + '</span><span class="dots">' + dots + '</span></span><span class="qr">' + (q.done ? '✅' : '+10 🪙') + '</span>';
+      box.appendChild(d);
+    });
+    var c = $('#chest'), ready = S.q.chest && !S.q.opened;
+    c.disabled = !ready; c.classList.toggle('ready', ready);
+    $('#chestT').textContent = S.q.opened ? 'Cofre abierto. ¡Vuelve mañana!' : ready ? '¡Abrir cofre!' : 'Cumple los 3 retos para el cofre';
+  }
+  function renderAch() {
+    var g = $('#agrid'); g.innerHTML = '';
+    ACH.forEach(function (a) {
+      var v = Math.min(a.n, achVal(a)), done = !!S.ach[a.id], d = document.createElement('div');
+      d.className = 'ach' + (done ? ' done' : '');
+      d.setAttribute('role', 'img'); d.setAttribute('aria-label', a.t + ': ' + v + ' de ' + a.n + (done ? ', conseguido' : ''));
+      d.innerHTML = '<div class="ah"><span class="ae" aria-hidden="true">' + a.e + '</span><span class="at">' + a.t + '</span></div>' +
+        '<div class="track"><div class="fill" style="width:' + Math.round(v / a.n * 100) + '%"></div></div>' +
+        '<div class="ar"><span class="pv">' + preview(a.r) + '</span><span>' + (done ? '✅ ¡Conseguido!' : v + ' / ' + a.n) + '</span></div>';
+      g.appendChild(d);
+    });
+  }
+  $('#chest').addEventListener('click', openChest);
+
+  /* ---------- Paso del tiempo ---------- */
   function tick() {
-    if (sleeping) return;
+    if (sleeping || !S.hatched) return;
     S.fed = cl(S.fed - 0.8); S.fun = cl(S.fun - 1.0); S.energy = cl(S.energy - 0.5);
     S.clean = cl(S.clean - 0.4 - (S.poop ? 0.5 : 0));
     if (!S.poop && S.fed > 40 && Math.random() < 0.05) S.poop = true;
     save(); ui(); needs();
   }
   function needs() {
-    if (busy || sleeping) return;
+    if (busy || sleeping || revShowing) return;
     var now = Date.now();
     if (now - lastNeed < 45000) return;
     var list = [['fed', '¡Tengo hambre!'], ['fun', '¡Quiero jugar!'], ['clean', 'Estoy sucio, quiero un baño'], ['energy', 'Tengo sueño']];
@@ -418,15 +950,15 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
   }
   setInterval(tick, 10000);
   setInterval(function () {
-    if (sleeping || talking) return;
+    if (sleeping || talking || !svg) return;
     svg.setAttribute('data-eyes', 'closed');
-    wait(function () { if (!sleeping) svg.setAttribute('data-eyes', 'open'); }, 150);
+    wait(function () { if (!sleeping && svg) svg.setAttribute('data-eyes', 'open'); }, 150);
   }, 4200);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { syncWallet(); ensureQuests(); checkAch(); ui(); badges(); } });
 
-  /* Acciones */
+  /* ---------- Acciones ---------- */
   function startFeed(emo) {
     if (busy) return;
-    if (S.fed >= 95) { view('main'); jump(); say('¡Estoy llenito!'); return; }
     busy = true; lock(true); view('main');
     var f = document.createElement('span');
     f.className = 'food'; f.textContent = emo; stage.appendChild(f);
@@ -435,12 +967,16 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
       var n = 0;
       (function chew() {
         n++;
-        svg.setAttribute('data-mouth', n % 2 ? 'open' : 'smile');
+        if (svg) svg.setAttribute('data-mouth', n % 2 ? 'open' : 'smile');
         tone(n % 2 ? 260 : 340, 0.08, 'square');
         if (n < 6) { wait(chew, 230); return; }
+        var hungry = S.fed < 90;
         S.fed = cl(S.fed + 25); S.fun = cl(S.fun + 3);
         if (!S.poop && Math.random() < 0.35) S.poop = true;
-        good(); hearts(); jump(); done(); say('¡Ñam, ñam, qué rico!');
+        good(); hearts(); jump();
+        if (hungry) { addCoins(2); addCP(2); }
+        ev('eat');
+        done(); say(hungry ? '¡Ñam, ñam, qué rico!' : '¡Ñam! Estoy llenito');
       })();
     }, 700);
   }
@@ -456,11 +992,12 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
       b.type = 'button'; b.className = 'bub'; b.textContent = '🫧'; b.setAttribute('aria-label', 'Burbuja');
       b.style.left = (p[0] + rnd(5) - 2) + '%'; b.style.top = (p[1] + rnd(5) - 2) + '%';
       b.addEventListener('click', function () {
-        b.remove(); pop(); left--;
+        b.remove(); pop(); left--; ev('bubble');
         S.clean = cl(S.clean + 25); S.energy = cl(S.energy - 1); ui();
         if (left === 0) {
           S.clean = 100; S.poop = false; S.fun = cl(S.fun + 4);
-          good(); hearts(); jump(); done(); say('¡Qué limpio estoy!');
+          good(); hearts(); jump(); addCoins(3); addCP(3); ev('bath');
+          done(); say('¡Qué limpio estoy!');
         }
       });
       stage.appendChild(b);
@@ -480,7 +1017,7 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
       tone(420 + count * 70, 0.12, 'triangle'); jump();
       S.fun = cl(S.fun + 10); S.energy = cl(S.energy - 3); ui();
       if (count >= 5) {
-        ball.remove(); good(); hearts(); done(); say('¡Qué divertido!');
+        ball.remove(); good(); hearts(); addCoins(4); addCP(3); ev('play'); done(); say('¡Qué divertido!');
       }
     });
     stage.appendChild(ball);
@@ -500,7 +1037,7 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
         c.type = 'button'; c.className = 'catch'; c.textContent = things[(i + rnd(3)) % things.length];
         c.setAttribute('aria-label', 'Cogerlo');
         c.style.left = (12 + rnd(66)) + '%'; c.style.top = (10 + rnd(30)) + '%';
-        c.addEventListener('click', function () { c.remove(); found++; pop(); S.fun = cl(S.fun + 4); ui(); });
+        c.addEventListener('click', function () { c.remove(); found++; pop(); S.fun = cl(S.fun + 4); ev('catch'); addCoins(1); });
         stage.appendChild(c); items.push(c);
         wait(function () { c.remove(); }, 3400);
       }, ms);
@@ -509,43 +1046,48 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
       stage.classList.remove('walking');
       items.forEach(function (c) { c.remove(); });
       S.energy = cl(S.energy - 15); S.clean = cl(S.clean - 20); S.fun = cl(S.fun + 12);
-      good(); hearts(); done();
-      say(found > 0 ? '¡Qué paseo tan bonito!' : '¡Qué paseo tan bonito!');
+      good(); hearts(); addCoins(3); addCP(4); ev('walk');
+      done(); say('¡Qué paseo tan bonito!');
     }, 8200);
   }
 
   function startSleep() {
     if (busy) return;
-    busy = true; lock(true); sleeping = true;
+    busy = true; lock(true); sleeping = true; sleepTicks = 0; sleepE0 = S.energy;
     stage.classList.add('sleeping'); $('#wake').hidden = false;
-    $('#poop').style.zIndex = '4';
     face();
-    bubble('Buenas noches'); speak('Buenas noches', 1.4);
+    bubble('Buenas noches'); speak('Buenas noches', 1.0);
     sleepT = setInterval(function () {
+      sleepTicks++;
       S.energy = cl(S.energy + 4); S.fed = cl(S.fed - 0.05); ui();
-      if (S.energy >= 100) wake();
+      if (S.energy >= 100 && sleepTicks >= 6) wake();
     }, 1000);
   }
   function wake() {
     if (!sleeping) return;
     clearInterval(sleepT); sleeping = false;
     stage.classList.remove('sleeping'); $('#wake').hidden = true;
+    var gained = S.energy - sleepE0, slept = sleepTicks >= 5;
     busy = false; lock(false); save(); ui(); jump();
+    if (slept) { if (gained >= 12) { addCoins(3); addCP(3); } ev('sleep'); }
     say('¡Buenos días!');
   }
 
-  var WORDS = [['👋', 'Hola'], ['🍎', 'Manzana'], ['🐶', 'Perro'], ['🐱', 'Gato'], ['🌞', 'Sol'], ['🎈', 'Globo'], ['❤️', 'Te quiero'], ['🥳', 'Hurra']];
+  var WORDS = [['👋', 'Hola'], ['🍎', 'Manzana'], ['🐶', 'Perro'], ['🐱', 'Gato'], ['🌞', 'Sol'], ['💨', 'Pedo'], ['❤️', 'Te quiero'], ['🥳', 'Hurra']];
   function repeat(text) {
     text = String(text).trim();
     if (!text) return;
-    jump(); S.fun = cl(S.fun + 3); save(); ui();
+    jump(); S.fun = cl(S.fun + 3); addCP(1); ev('talk'); save(); ui();
     bubble(text); speak(text); talkAnim(text);
   }
   WORDS.forEach(function (w) {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'pick'; b.setAttribute('aria-label', w[1]);
     b.innerHTML = '<span aria-hidden="true">' + w[0] + '</span><small>' + w[1] + '</small>';
-    b.addEventListener('click', function () { repeat(w[1] === 'Hurra' ? '¡Hurra!' : w[1]); });
+    b.addEventListener('click', function () {
+      if (w[1] === 'Pedo') { sFart(); hearts('💨'); jump(); S.fun = cl(S.fun + 3); ev('talk'); save(); ui(); bubble('¡Pffrrt!'); speak('¡Pffrrt! ¡Huy, perdón!'); talkAnim('¡Pffrrt!'); return; }
+      repeat(w[1] === 'Hurra' ? '¡Hurra!' : w[1]);
+    });
     $('#words').appendChild(b);
   });
   $('#sayform').addEventListener('submit', function (e) {
@@ -553,12 +1095,15 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
     var i = $('#said'); repeat(i.value); i.value = '';
   });
 
-  /* Eventos */
-  document.querySelectorAll('.act').forEach(function (b) {
+  /* ---------- Eventos ---------- */
+  document.querySelectorAll('#v-main .tile').forEach(function (b) {
     b.addEventListener('click', function () {
       var a = b.getAttribute('data-act');
       if (a === 'eat') view('food');
       if (a === 'talk') view('talk');
+      if (a === 'shop') view('shop');
+      if (a === 'quests') view('quests');
+      if (a === 'ach') view('ach');
       if (a === 'bath') startBath();
       if (a === 'play') startPlay();
       if (a === 'walk') startWalk();
@@ -572,21 +1117,36 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
     b.addEventListener('click', function () { view('main'); });
   });
   $('#wake').addEventListener('click', wake);
-  petwrap.addEventListener('click', function () {
+  petbtn.addEventListener('click', function () {
     if (sleeping) return;
     jump(); hearts(); tone(700, 0.1, 'triangle'); tone(900, 0.1, 'triangle', 0.1);
+    ev('tap');
     bubble('¡Jiji, cosquillas!'); speak('¡Jiji, cosquillas!'); talkAnim('¡Jiji, cosquillas!');
   });
+  eggbtn.addEventListener('click', function () {
+    S.eggTaps++;
+    eggbtn.classList.remove('wob'); void eggbtn.offsetWidth; eggbtn.classList.add('wob');
+    tone(300 + S.eggTaps * 80, 0.1, 'square');
+    if (S.eggTaps >= 5) {
+      S.hatched = true; save(); renderPet(); ui(); lock(false);
+      fanfare(); hearts();
+      showReveal('¡Ha nacido ' + S.name + '!', petSVG(S.eq, {}), '¡Cuídalo mucho! Gana monedas y crecerá.');
+      speak('¡Ha nacido ' + S.name + '!');
+    } else {
+      save(); ui();
+      bubble(S.eggTaps === 4 ? '¡Ya casi sale!' : '¡Sigue tocando el huevo!');
+    }
+  });
   $('#poop').addEventListener('click', function () {
-    S.poop = false; S.clean = cl(S.clean + 6); pop(); save(); ui(); bubble('¡Limpio!');
+    S.poop = false; S.clean = cl(S.clean + 6); pop(); addCoins(1); save(); ui(); bubble('¡Limpio!');
   });
 
-  /* Ajustes */
+  /* ---------- Ajustes ---------- */
   var sw = $('#swatches');
   PAL.forEach(function (p, i) {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'swatch'; b.style.background = p.p; b.setAttribute('aria-label', p.n);
-    b.addEventListener('click', function () { S.color = i; save(); ui(); });
+    b.addEventListener('click', function () { S.color = i; save(); ui(); if (!$('#v-shop').hidden) renderShop(); });
     sw.appendChild(b);
   });
   var nameIn = $('#nameIn');
@@ -603,14 +1163,26 @@ summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-s
     }
     clearTimeout(armT); armed = false; b.textContent = 'Empezar de nuevo';
     var c = S.color;
-    S = JSON.parse(JSON.stringify(DEF)); S.color = c; S.t = Date.now();
-    nameIn.value = S.name; save(); ui();
+    S = clone(DEF); S.color = c; S.t = Date.now(); S.q = null;
+    nameIn.value = S.name; ensureQuests(); renderPet(); applyScene(); applyDeco(); save(); ui(); badges(); lock(true);
   });
 
+  /* ---------- Arranque ---------- */
   load();
+  syncWallet();
+  ensureQuests();
   nameIn.value = S.name;
-  ui();
-  wait(function () { bubble('¡Hola! Soy ' + S.name); }, 400);
+  renderPet(); applyScene(); applyDeco();
+  ui(); badges();
+  if (!S.hatched) { lock(true); wait(function () { bubble('¡Toca el huevo para que nazca!'); }, 500); }
+  else { checkAch(); wait(function () { bubble('¡Hola! Soy ' + S.name); }, 400); }
+
+  if (location.hash === '#test') window.__pet = {
+    S: function () { return S; }, coins: function () { return coins; }, addCoins: addCoins, ev: ev, tapItem: tapItem,
+    ITEMS: ITEMS, ACH: ACH, checkAch: checkAch, openChest: openChest, addCP: addCP, stageNum: stageNum, view: view,
+    renderShop: renderShop, renderQuests: renderQuests, renderAch: renderAch, setTab: function (t) { tab = t; }, ensureQuests: ensureQuests,
+    revealCount: function () { return reveals.length + (revShowing ? 1 : 0); }
+  };
 })();
 </script>
 

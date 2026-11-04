@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
+<script src="voz.js"></script>
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}img{max-width:100%}[hidden]{display:none!important}
@@ -25,12 +26,20 @@ padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(
 padding-block:28px 32px;min-height:100vh;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
 h1{font-size:clamp(38px,11vw,56px);line-height:1;margin:0;text-align:center}
-.big{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:230px;
+.big{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:170px;
 border-radius:34px;text-decoration:none;color:var(--ink);box-shadow:0 9px 0 var(--edge);font-size:34px;transition:transform .1s}
 .big:active{transform:translateY(6px);box-shadow:0 3px 0 var(--edge)}
-.big .e{font-size:86px;line-height:1}
-.a{background:var(--sun)}.b{background:var(--mint)}
+.big .e{font-size:68px;line-height:1}
+.a{background:var(--sun)}.b{background:var(--mint)}.c{background:#ff9a8b}
 a:focus-visible{outline:4px solid var(--ink);outline-offset:4px}
+details{background:#fff;border-radius:22px;padding:14px 18px;box-shadow:0 5px 0 var(--edge);font-size:18px}
+summary{cursor:pointer;font-size:22px}
+summary:focus-visible,select:focus-visible,button:focus-visible,input:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+.vrow{display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:16px}
+.vrow select,.vrow input{width:100%;min-height:50px;border-radius:14px;border:3px solid var(--edge);padding:0 10px;font:inherit;font-weight:800;background:#fff;color:var(--ink)}
+.vrow input{padding:0}
+.vtest{margin-top:16px;min-height:56px;width:100%;border-radius:18px;border:0;background:var(--sun);color:var(--ink);font:inherit;font-size:22px;font-weight:800;box-shadow:0 5px 0 var(--edge);cursor:pointer}
+.vnote{font-size:14px;opacity:.8;margin:14px 0 0;font-weight:700}
 </style>
 </head>
 <body>
@@ -38,7 +47,40 @@ a:focus-visible{outline:4px solid var(--ink);outline-offset:4px}
   <h1>¡A jugar!</h1>
   <a class="big a" href="./juegos.html"><span class="e" aria-hidden="true">🎈</span>Minijuegos</a>
   <a class="big b" href="./mascota.html"><span class="e" aria-hidden="true">🐾</span>Mi mascota</a>
+  <a class="big c" href="./alan.html"><span class="e" aria-hidden="true">🧢</span>Alan salta</a>
+  <details id="vozbox">
+    <summary>🔊 Cambiar la voz</summary>
+    <div class="vrow"><label for="vsel">Voz</label><select id="vsel"></select></div>
+    <div class="vrow"><label for="vsty">Estilo</label>
+      <select id="vsty"><option value="natural">Natural</option><option value="gracioso">Graciosa (tono cambiado)</option></select></div>
+    <div class="vrow"><label for="vrate">Velocidad</label><input id="vrate" type="range" min="0.6" max="1.3" step="0.05"></div>
+    <button class="vtest" id="vtest" type="button">▶ Probar la voz</button>
+    <p class="vnote">Prueba varias voces hasta que una te guste. Se guarda en este aparato y vale para los tres juegos.</p>
+  </details>
 </div>
+<script>
+(function () {
+  var V = window.VOZ, box = document.getElementById('vozbox');
+  if (!V || !('speechSynthesis' in window)) { if (box) box.hidden = true; return; }
+  var sel = document.getElementById('vsel'), sty = document.getElementById('vsty'), rate = document.getElementById('vrate');
+  function fill() {
+    var cur = V.cfg().voice;
+    sel.innerHTML = '';
+    sel.add(new Option('Automática (la mejor del aparato)', ''));
+    V.list().forEach(function (v) { sel.add(new Option(v.name + ' (' + v.lang + ')', v.voiceURI)); });
+    sel.value = cur; if (sel.value !== cur) sel.value = '';
+  }
+  function say() { V.speak('Hola, soy tu amigo. ¡Vamos a jugar!', { rate: 1, pitch: 1.5 }); }
+  fill();
+  try { speechSynthesis.onvoiceschanged = fill; } catch (e) {}
+  setTimeout(fill, 600);
+  sty.value = V.cfg().style; rate.value = V.cfg().rate;
+  sel.addEventListener('change', function () { V.set({ voice: sel.value }); say(); });
+  sty.addEventListener('change', function () { V.set({ style: sty.value }); say(); });
+  rate.addEventListener('change', function () { V.set({ rate: parseFloat(rate.value) }); say(); });
+  document.getElementById('vtest').addEventListener('click', say);
+})();
+</script>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
 </body>
 </html>
